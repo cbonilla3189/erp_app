@@ -1,207 +1,452 @@
 {% extends "auth_base.html" %}
-{% block title %}Registro{% endblock %}
+{% block title %}Registro — aruna{% endblock %}
 
 {% block content %}
-<div class="register-container">
-  <div class="card register-card shadow-lg p-4 rounded-4">
-    <h2 class="text-center mb-3 register-title">Crear cuenta</h2>
+<div class="reg-wrap">
 
-    <form id="registerForm" method="POST" action="/register" novalidate>
-      <div class="row g-2">
-        <div class="col-md-6 mb-3">
-          <label for="nombre" class="form-label fw-semibold">Nombre</label>
-          <input id="nombre" type="text" class="form-control form-control-lg" name="nombre" placeholder="Ej. Carlos" required>
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="apellido" class="form-label fw-semibold">Apellido</label>
-          <input id="apellido" type="text" class="form-control form-control-lg" name="apellido" placeholder="Ej. Bonilla" required>
-        </div>
+  <!-- Lado izquierdo: branding -->
+  <div class="reg-brand">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="/static/img/aruna_5.png" alt="aruna">
       </div>
-
-      <div class="mb-3">
-        <label for="empresa" class="form-label fw-semibold">Empresa</label>
-        <input id="empresa" type="text" class="form-control form-control-lg" name="empresa" placeholder="Nombre de la empresa">
-      </div>
-
-      <div class="mb-3">
-        <label for="correo" class="form-label fw-semibold">Correo electrónico</label>
-        <input id="correo" type="email" class="form-control form-control-lg" name="correo" placeholder="correo@empresa.com" required>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-md-8 mb-3">
-          <label for="ruc" class="form-label fw-semibold">RUC</label>
-          <input id="ruc" type="text" class="form-control form-control-lg" name="ruc" placeholder="Ej. 1234567-8-999999">
-        </div>
-        <div class="col-md-4 mb-3">
-          <label for="dv" class="form-label fw-semibold">DV</label>
-          <input id="dv" type="text" class="form-control form-control-lg" name="dv" placeholder="Ej. 55">
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="telefono" class="form-label fw-semibold">Teléfono</label>
-        <input id="telefono" type="text" class="form-control form-control-lg" name="telefono" placeholder="Ej. +507 6000-0000">
-      </div>
-
-      <div class="mb-3">
-        <label for="username" class="form-label fw-semibold">Usuario</label>
-        <input id="username" type="text" class="form-control form-control-lg" name="username" placeholder="Nombre de usuario" required>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-md-6 mb-3">
-          <label for="password" class="form-label fw-semibold">Contraseña</label>
-          <input id="password" type="password" class="form-control form-control-lg" name="password" placeholder="********" required aria-describedby="passwordHelp">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="confirm_password" class="form-label fw-semibold">Confirmar contraseña</label>
-          <input id="confirm_password" type="password" class="form-control form-control-lg" name="confirm_password" placeholder="********" required>
-        </div>
-      </div>
-
-      <div id="error-msg" class="error-box small mb-3" role="alert" aria-live="polite"></div>
-
-      <div class="d-flex justify-content-between align-items-center mt-3">
-        <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">← Volver al inicio</a>
-        <button type="submit" class="btn btn-primary btn-lg rounded-pill">Registrarme</button>
-      </div>
-
-      <div class="text-center mt-4">
-        <small>¿Ya tienes cuenta? <a href="{{ url_for('login') }}" class="text-decoration-none fw-semibold">Inicia sesión</a></small>
-      </div>
-    </form>
+      <h1 class="brand-headline">Bienvenido a<br><span>aruna</span></h1>
+      <p class="brand-sub">Gestiona tu empresa, inventario y clientes desde un solo lugar.</p>
+      <ul class="brand-features">
+        <li><span class="feat-icon">📦</span> Inventario en tiempo real</li>
+        <li><span class="feat-icon">📣</span> CRM y campañas de email</li>
+        <li><span class="feat-icon">🤖</span> Respuestas automáticas</li>
+        <li><span class="feat-icon">🔐</span> Seguro y confiable</li>
+      </ul>
+    </div>
   </div>
+
+  <!-- Lado derecho: formulario -->
+  <div class="reg-form-side">
+    <div class="reg-card">
+
+      <div class="reg-header">
+        <h2>Crear cuenta</h2>
+        <p>Completa tus datos para comenzar</p>
+      </div>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form id="registerForm" method="POST" action="/register" novalidate>
+
+        <!-- Sección: Datos personales -->
+        <div class="form-section">
+          <div class="section-label">Datos personales</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre <span class="req">*</span></label>
+              <input id="nombre" type="text" name="nombre" placeholder="Carlos" required autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="apellido">Apellido <span class="req">*</span></label>
+              <input id="apellido" type="text" name="apellido" placeholder="Bonilla" required autocomplete="family-name">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="correo">Correo electrónico <span class="req">*</span></label>
+            <input id="correo" type="email" name="correo" placeholder="correo@empresa.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" type="text" name="telefono" placeholder="+507 6000-0000" autocomplete="tel">
+          </div>
+        </div>
+
+        <!-- Sección: Empresa -->
+        <div class="form-section">
+          <div class="section-label">Información de empresa</div>
+          <div class="form-group">
+            <label for="empresa">Empresa</label>
+            <input id="empresa" type="text" name="empresa" placeholder="Nombre de la empresa" autocomplete="organization">
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label for="ruc">RUC</label>
+              <input id="ruc" type="text" name="ruc" placeholder="Ej. 8-888-8888">
+            </div>
+            <div class="form-group" style="flex:1">
+              <label for="dv">DV</label>
+              <input id="dv" type="text" name="dv" placeholder="55">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Acceso -->
+        <div class="form-section">
+          <div class="section-label">Credenciales de acceso</div>
+          <div class="form-group">
+            <label for="username">Usuario <span class="req">*</span></label>
+            <input id="username" type="text" name="username" placeholder="nombre_usuario" required autocomplete="username">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="password">Contraseña <span class="req">*</span></label>
+              <div class="input-pw">
+                <input id="password" type="password" name="password" placeholder="••••••••" required autocomplete="new-password">
+                <button type="button" class="toggle-pw" data-target="password" aria-label="Ver contraseña">👁</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="confirm_password">Confirmar <span class="req">*</span></label>
+              <div class="input-pw">
+                <input id="confirm_password" type="password" name="confirm_password" placeholder="••••••••" required autocomplete="new-password">
+                <button type="button" class="toggle-pw" data-target="confirm_password" aria-label="Ver contraseña">👁</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requisitos de contraseña -->
+          <div class="pw-hints" id="pwHints">
+            <div class="hint" id="h-len">Mínimo 8 caracteres</div>
+            <div class="hint" id="h-upper">Una mayúscula</div>
+            <div class="hint" id="h-lower">Una minúscula</div>
+            <div class="hint" id="h-num">Un número</div>
+            <div class="hint" id="h-special">Un carácter especial (!@#$%^&*)</div>
+          </div>
+        </div>
+
+        <div id="error-msg" class="error-box" role="alert" aria-live="polite"></div>
+
+        <button type="submit" class="btn-register">
+          <span>Crear mi cuenta</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="reg-footer">
+          ¿Ya tienes cuenta?
+          <a href="{{ url_for('login') }}">Inicia sesión</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 </div>
 
 <style>
-/* Layout general */
-.register-container {
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.reg-wrap {
   display: flex;
-  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── Lado izquierdo (branding) ── */
+.reg-brand {
+  flex: 0 0 380px;
+  background: linear-gradient(160deg, #3b1278 0%, #561d9c 40%, #8b3fe3 75%, #ff6fb5 100%);
+  display: flex;
   align-items: center;
-  min-height: 85vh;
-  padding: 2rem;
-  background: linear-gradient(135deg,#0ea5a4 0%,#3b82f6 100%);
+  justify-content: center;
+  padding: 3rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.reg-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 60%),
+              radial-gradient(circle at 80% 80%, rgba(255,111,181,0.15), transparent 50%);
+}
+.brand-inner { position: relative; z-index: 1; color: #fff; }
+.brand-logo img { height: 60px; margin-bottom: 2rem; filter: brightness(0) invert(1); }
+.brand-headline {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+}
+.brand-headline span { color: #ffb3d9; }
+.brand-sub {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+.brand-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.brand-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  opacity: 0.9;
+}
+.feat-icon { font-size: 1.1rem; }
+
+/* ── Lado derecho (form) ── */
+.reg-form-side {
+  flex: 1;
+  background: linear-gradient(135deg, #561d9c 0%, #8b3fe3 55%, #ff6fb5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
 }
 
-/* Card */
-.register-card {
+.reg-card {
   width: 100%;
-  max-width: 520px;
-  background: rgba(255,255,255,0.98);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.18);
-  padding: 1.75rem;
-  border: 1px solid rgba(0,0,0,0.04);
+  max-width: 600px;
+  background: rgba(255,255,255,0.97);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 24px 60px rgba(30,0,60,0.25);
+  backdrop-filter: blur(10px);
 }
 
-/* Título */
-.register-title {
-  margin-bottom: 0.75rem;
-  font-size: 1.4rem;
-  color: #0b5ed7;
+.reg-header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+.reg-header h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #2d0060;
+  margin-bottom: 0.25rem;
+}
+.reg-header p {
+  font-size: 0.9rem;
+  color: #7c5fa0;
 }
 
-/* Labels e inputs */
-.form-label { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
-input.form-control {
+/* ── Secciones ── */
+.form-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f0eaf7;
+}
+.form-section:last-of-type { border-bottom: none; margin-bottom: 0; }
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b3fe3;
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-row .form-group { flex: 1; }
+
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3d1a6e;
+  margin-bottom: 0.35rem;
+}
+.req { color: #e040a0; }
+
+.form-group input {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid #e2d6f3;
   border-radius: 10px;
-  border: 1px solid #e6e9ee;
-  padding: 0.7rem 0.9rem;
-  transition: all 0.18s ease;
-  background: #fff;
-}
-input.form-control:focus {
-  border-color: #0b5ed7;
-  box-shadow: 0 6px 18px rgba(11,94,215,0.08);
+  font-size: 0.92rem;
+  color: #1a0035;
+  background: #fdf9ff;
+  transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
+.form-group input:focus {
+  border-color: #8b3fe3;
+  box-shadow: 0 0 0 3px rgba(139,63,227,0.12);
+  background: #fff;
+}
+.form-group input::placeholder { color: #b8a8d0; }
 
-/* Botones */
-.btn-primary {
-  background: linear-gradient(180deg,#0b5ed7,#084bb5);
+/* Toggle contraseña */
+.input-pw { position: relative; }
+.input-pw input { padding-right: 2.5rem; }
+.toggle-pw {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
   border: none;
-  box-shadow: 0 6px 18px rgba(11,94,215,0.12);
-  padding: 0.7rem 1rem;
-  font-weight: 700;
-  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
 }
-.btn-secondary {
-  background: transparent;
-  border: 1px solid rgba(11,94,215,0.12);
-  color: #0b5ed7;
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  font-weight: 600;
+.toggle-pw:hover { opacity: 1; }
+
+/* Hints de contraseña */
+.pw-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.hint {
+  font-size: 0.73rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  background: #f3eeff;
+  color: #8b3fe3;
+  border: 1px solid #ddd0f7;
+  transition: all 0.2s;
+}
+.hint.valid {
+  background: #e8f8f0;
+  color: #1a7a4a;
+  border-color: #a8e6c3;
 }
 
-/* Mensaje de error */
+/* Error box */
 .error-box {
   color: #b91c1c;
-  background: rgba(185,28,28,0.04);
-  padding: 0.5rem 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.6rem 0.9rem;
   border-radius: 8px;
-  font-size: 0.92rem;
+  font-size: 0.87rem;
+  margin-bottom: 1rem;
+  display: none;
 }
+.error-box:not(:empty) { display: block; }
+
+/* Botón registrar */
+.btn-register {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.5rem;
+  background: linear-gradient(135deg, #561d9c, #8b3fe3);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(86,29,156,0.35);
+  margin-bottom: 1.25rem;
+}
+.btn-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(86,29,156,0.4);
+}
+.btn-register:active { transform: translateY(0); }
+
+/* Alert flash */
+.alert {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  margin-bottom: 1rem;
+}
+.alert-success { background: #e8f8f0; color: #1a7a4a; border: 1px solid #a8e6c3; }
+.alert-danger  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.alert-info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+.reg-footer {
+  text-align: center;
+  font-size: 0.87rem;
+  color: #7c5fa0;
+}
+.reg-footer a {
+  color: #7c22e0;
+  font-weight: 700;
+  text-decoration: none;
+}
+.reg-footer a:hover { text-decoration: underline; }
 
 /* Responsive */
-@media (max-width: 576px) {
-  .register-card { padding: 1.1rem; }
-  .register-title { font-size: 1.15rem; }
+@media (max-width: 860px) {
+  .reg-brand { display: none; }
+  .reg-form-side { padding: 1.5rem 1rem; }
+  .reg-card { padding: 1.75rem 1.25rem; }
+}
+@media (max-width: 480px) {
+  .form-row { flex-direction: column; gap: 0; }
 }
 </style>
 
 <script>
-(function() {
-  const form = document.getElementById('registerForm');
-  const passwordEl = document.getElementById('password');
-  const confirmEl = document.getElementById('confirm_password');
-  const errorMsg = document.getElementById('error-msg');
+(function () {
+  const form       = document.getElementById('registerForm');
+  const pwEl       = document.getElementById('password');
+  const confirmEl  = document.getElementById('confirm_password');
+  const errorMsg   = document.getElementById('error-msg');
 
-  function showError(html) {
-    errorMsg.innerHTML = html;
-    errorMsg.scrollIntoView({behavior: 'smooth', block: 'center'});
-  }
-
-  function clearError() {
-    errorMsg.innerHTML = '';
-  }
-
-  form.addEventListener('submit', function(e) {
-    const password = passwordEl.value || '';
-    const confirm = confirmEl.value || '';
-
-    if (password !== confirm) {
-      e.preventDefault();
-      showError('❌ Las contraseñas no coinciden');
-      return;
-    }
-
-    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,}$/;
-    if (!pattern.test(password)) {
-      e.preventDefault();
-      showError(
-        '❌ La contraseña debe cumplir con los siguientes requisitos:' +
-        '<ul class="mt-2 mb-0">' +
-        '<li>Mínimo 8 caracteres</li>' +
-        '<li>Al menos una letra mayúscula</li>' +
-        '<li>Al menos una letra minúscula</li>' +
-        '<li>Al menos un número</li>' +
-        '<li>Al menos un carácter especial (!@#$%^&*()_-+=)</li>' +
-        '</ul>'
-      );
-      return;
-    }
-
-    clearError();
+  // Toggle ver/ocultar contraseña
+  document.querySelectorAll('.toggle-pw').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      target.type  = target.type === 'password' ? 'text' : 'password';
+      btn.textContent = target.type === 'password' ? '👁' : '🙈';
+    });
   });
 
-  // Limpiar mensaje de error al editar campos relevantes
-  ['input','change'].forEach(evt => {
-    [passwordEl, confirmEl, document.getElementById('username'), document.getElementById('correo')].forEach(el=>{
-      if (el) el.addEventListener(evt, clearError);
+  // Validación visual de contraseña en tiempo real
+  const hints = {
+    'h-len':     v => v.length >= 8,
+    'h-upper':   v => /[A-Z]/.test(v),
+    'h-lower':   v => /[a-z]/.test(v),
+    'h-num':     v => /\d/.test(v),
+    'h-special': v => /[!@#$%^&*()_\-+=]/.test(v),
+  };
+
+  pwEl.addEventListener('input', () => {
+    const v = pwEl.value;
+    Object.entries(hints).forEach(([id, fn]) => {
+      document.getElementById(id).classList.toggle('valid', fn(v));
     });
+  });
+
+  function showError(msg) {
+    errorMsg.innerHTML = msg;
+    errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', e => {
+    const pw  = pwEl.value;
+    const cpw = confirmEl.value;
+    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=]).{8,}$/;
+
+    if (pw !== cpw) {
+      e.preventDefault();
+      showError('❌ Las contraseñas no coinciden.');
+      return;
+    }
+    if (!pattern.test(pw)) {
+      e.preventDefault();
+      showError('❌ La contraseña no cumple los requisitos de seguridad.');
+      return;
+    }
+    errorMsg.innerHTML = '';
   });
 })();
 </script>
