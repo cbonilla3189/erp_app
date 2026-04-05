@@ -18,4 +18,4 @@ RUN mkdir -p /run/inventario
 EXPOSE 5000
 
 # Lanzar Gunicorn con socket
-CMD ["gunicorn", "--bind", "unix:/run/inventario/inventario.sock", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

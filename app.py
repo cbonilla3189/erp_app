@@ -1,5 +1,7 @@
 # app.py
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import secrets
 import sqlite3
 import datetime
@@ -15,15 +17,15 @@ from flask_mail import Mail, Message
 # Configuración
 # -----------------------------
 app = Flask(__name__)
-app.secret_key = "clave_secreta_para_sesiones"  # cámbiala en producción
+app.secret_key = os.environ.get("SECRET_KEY")
 
 # Mail (usa contraseña de aplicación para Gmail)
 app.config.update(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
-    MAIL_USERNAME='carlosbonillau3189@gmail.com',
-    MAIL_PASSWORD='alas dzko vshu bhkh'  # reemplaza por tu password app
+    MAIL_USERNAME=os.environ.get('MAIL_USERNAME'),
+    MAIL_PASSWORD=os.environ.get('MAIL_PASSWORD'),
 )
 mail = Mail(app)
 
