@@ -1,0 +1,27 @@
+# Base de datos
+*.db
+*.sqlite3
+
+# Credenciales
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Archivos de respaldo
+appcopy.py
+app_index.py
+nano.*.save
+*.bak
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/

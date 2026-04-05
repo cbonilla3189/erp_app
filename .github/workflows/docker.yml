@@ -1,0 +1,26 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Login a Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ARUNAPANAMA }}
+          password: ${{ secrets.13824690Ca@ }}
+
+      - name: Build y Push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: cbonilla3189/inventario_app:latest
