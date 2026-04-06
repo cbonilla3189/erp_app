@@ -40,7 +40,7 @@
         <span style="font-size:.75rem;color:#c4b4d8">Creado {{ inv.creado_en.strftime('%d/%m/%Y') }}</span>
       </div>
       <div style="display:flex;gap:.5rem">
-        <a href="{{ url_for('inventario', inv_id=inv.id) }}"
+        <a href="{{ url_for('categorias', inv_id=inv.id) }}"
            style="flex:1;display:flex;align-items:center;justify-content:center;gap:.3rem;padding:.55rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none">
           <i class="bi bi-box-seam"></i> Abrir
         </a>

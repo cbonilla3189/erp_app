@@ -1,0 +1,85 @@
+{% extends "panel_base.html" %}
+{% block title %}Nueva categoria — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-tag-fill"></i> Nueva categoria</div>
+    <a href="{{ url_for('categorias', inv_id=inv.id) }}" class="btn-act btn-edit">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-tags"></i> {{ inv.nombre }}</h5></div>
+    <div style="padding:1.75rem">
+      <form method="POST">
+        <div style="margin-bottom:1rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Nombre *</label>
+          <input type="text" name="nombre" placeholder="Ej. Laptops, Harinas, Camisas" required
+            style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+        </div>
+        <div style="margin-bottom:1rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Descripcion</label>
+          <textarea name="descripcion" rows="2" placeholder="Describe esta categoria..."
+            style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;resize:vertical"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Tipo</label>
+            <select name="tipo" id="tipoSelect" onchange="toggleStockMin(this.value)"
+              style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+              <option value="stock">Producto con stock</option>
+              <option value="activo">Activo unico (S/N)</option>
+            </select>
+          </div>
+          <div id="stockMinGroup">
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Stock minimo</label>
+            <input type="number" name="stock_minimo" value="5" min="0"
+              style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          </div>
+        </div>
+        <div style="margin-bottom:1.5rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Color</label>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <div class="cdot" onclick="setColor('#561d9c',this)" style="width:28px;height:28px;border-radius:50%;background:#561d9c;cursor:pointer;border:3px solid #2d0060"></div>
+            <div class="cdot" onclick="setColor('#1a7a4a',this)" style="width:28px;height:28px;border-radius:50%;background:#1a7a4a;cursor:pointer;border:3px solid transparent"></div>
+            <div class="cdot" onclick="setColor('#b91c1c',this)" style="width:28px;height:28px;border-radius:50%;background:#b91c1c;cursor:pointer;border:3px solid transparent"></div>
+            <div class="cdot" onclick="setColor('#92400e',this)" style="width:28px;height:28px;border-radius:50%;background:#92400e;cursor:pointer;border:3px solid transparent"></div>
+            <div class="cdot" onclick="setColor('#1d4ed8',this)" style="width:28px;height:28px;border-radius:50%;background:#1d4ed8;cursor:pointer;border:3px solid transparent"></div>
+            <div class="cdot" onclick="setColor('#0f766e',this)" style="width:28px;height:28px;border-radius:50%;background:#0f766e;cursor:pointer;border:3px solid transparent"></div>
+          </div>
+          <input type="hidden" name="color" id="colorInput" value="#561d9c">
+        </div>
+        <div id="infoStock" style="background:#f0e8ff;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.82rem;color:#561d9c">
+          <strong>Producto con stock:</strong> para articulos con cantidades (harinas, ropa, repuestos). El stock minimo genera alertas.
+        </div>
+        <div id="infoActivo" style="display:none;background:#e8f0ff;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.82rem;color:#1d4ed8">
+          <strong>Activo unico:</strong> para equipos con numero de serie, herramientas individuales. Cada item tiene su propia ficha.
+        </div>
+        <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Crear categoria
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function toggleStockMin(tipo) {
+  const sg = document.getElementById('stockMinGroup');
+  const is = document.getElementById('infoStock');
+  const ia = document.getElementById('infoActivo');
+  if (tipo === 'activo') {
+    sg.style.opacity = '.4'; sg.style.pointerEvents = 'none';
+    is.style.display = 'none'; ia.style.display = 'block';
+  } else {
+    sg.style.opacity = '1'; sg.style.pointerEvents = 'auto';
+    is.style.display = 'block'; ia.style.display = 'none';
+  }
+}
+function setColor(color, el) {
+  document.querySelectorAll('.cdot').forEach(d => d.style.border = '3px solid transparent');
+  el.style.border = '3px solid #2d0060';
+  document.getElementById('colorInput').value = color;
+}
+</script>
+{% endblock %}

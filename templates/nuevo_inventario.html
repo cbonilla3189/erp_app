@@ -2,58 +2,129 @@
 {% block title %}Nuevo inventario — aruna{% endblock %}
 
 {% block content %}
-<div style="max-width:560px;margin:0 auto">
+<div style="max-width:700px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
-    <div class="section-title" style="margin-bottom:0">
-      <i class="bi bi-plus-square"></i> Nuevo inventario
-    </div>
-    <a href="{{ url_for('lista_inventarios') }}" class="btn-act btn-edit">
-      <i class="bi bi-arrow-left"></i> Volver
-    </a>
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-plus-square"></i> Nuevo inventario</div>
+    <a href="{{ url_for('lista_inventarios') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
   </div>
-  <div class="panel-card">
-    <div class="panel-card-header">
-      <h5><i class="bi bi-boxes"></i> Datos del inventario</h5>
+
+  <div id="paso1">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-grid"></i> Elige un tipo de inventario</h5></div>
+      <div style="padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">
+        <div class="tcard" onclick="selectTemplate('tecnologia',this)" style="border:2px solid #ede8f7;border-radius:14px;padding:1.25rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2rem;margin-bottom:.5rem">💻</div>
+          <div style="font-weight:700;color:#2d0060;margin-bottom:.3rem">Tecnologia</div>
+          <div style="font-size:.73rem;color:#9c7fc0">S/N, ubicacion, responsable, estado</div>
+        </div>
+        <div class="tcard" onclick="selectTemplate('restaurante',this)" style="border:2px solid #ede8f7;border-radius:14px;padding:1.25rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2rem;margin-bottom:.5rem">🍽️</div>
+          <div style="font-weight:700;color:#2d0060;margin-bottom:.3rem">Restaurante</div>
+          <div style="font-size:.73rem;color:#9c7fc0">Unidad, proveedor, vencimiento</div>
+        </div>
+        <div class="tcard" onclick="selectTemplate('taller',this)" style="border:2px solid #ede8f7;border-radius:14px;padding:1.25rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2rem;margin-bottom:.5rem">🔧</div>
+          <div style="font-weight:700;color:#2d0060;margin-bottom:.3rem">Taller</div>
+          <div style="font-size:.73rem;color:#9c7fc0">S/N, ubicacion, mantenimiento</div>
+        </div>
+        <div class="tcard" onclick="selectTemplate('ropa',this)" style="border:2px solid #ede8f7;border-radius:14px;padding:1.25rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2rem;margin-bottom:.5rem">👕</div>
+          <div style="font-weight:700;color:#2d0060;margin-bottom:.3rem">Ropa/Tienda</div>
+          <div style="font-size:.73rem;color:#9c7fc0">Talla, color, SKU, proveedor</div>
+        </div>
+        <div class="tcard" onclick="selectTemplate('general',this)" style="border:2px solid #ede8f7;border-radius:14px;padding:1.25rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2rem;margin-bottom:.5rem">📦</div>
+          <div style="font-weight:700;color:#2d0060;margin-bottom:.3rem">General</div>
+          <div style="font-size:.73rem;color:#9c7fc0">Sin campos pre-cargados</div>
+        </div>
+      </div>
     </div>
-    <div style="padding:1.75rem">
-      <form method="POST">
-        <div class="fi-group" style="margin-bottom:1rem">
-          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Nombre *</label>
-          <input type="text" name="nombre" placeholder="Ej. Equipos IT, Suministros, Cocina" required
-            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%">
-        </div>
-        <div class="fi-group" style="margin-bottom:1rem">
-          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Descripción</label>
-          <textarea name="descripcion" placeholder="Describe qué contiene este inventario..." rows="3"
-            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
-        </div>
-        <div class="fi-group" style="margin-bottom:1.75rem">
-          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Color identificador</label>
-          <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.25rem">
-            {% for color in ["#561d9c","#1a7a4a","#b91c1c","#92400e","#1d4ed8","#0f766e","#be185d","#374151"] %}
-            <label style="cursor:pointer">
-              <input type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %} style="display:none">
-              <div class="color-opt" style="width:32px;height:32px;border-radius:50%;background:{{ color }};border:3px solid transparent;transition:all .15s"
-                onclick="selectColor(this, '{{ color }}')"></div>
-            </label>
-            {% endfor %}
+  </div>
+
+  <div id="paso2" style="display:none">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 id="formTitle"><i class="bi bi-boxes"></i> Datos del inventario</h5>
+      </div>
+      <div style="padding:1.75rem">
+        <form method="POST">
+          <input type="hidden" name="template_tipo" id="template_tipo">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="fi-group">
+              <label>Nombre *</label>
+              <input type="text" name="nombre" placeholder="Ej. Equipos IT, Bodega 1" required>
+            </div>
+            <div class="fi-group">
+              <label>Color</label>
+              <div style="display:flex;gap:.5rem;margin-top:.3rem;flex-wrap:wrap">
+                <div class="cdot" data-color="#561d9c" onclick="setColor('#561d9c',this)" style="width:28px;height:28px;border-radius:50%;background:#561d9c;cursor:pointer;border:3px solid #2d0060"></div>
+                <div class="cdot" data-color="#1a7a4a" onclick="setColor('#1a7a4a',this)" style="width:28px;height:28px;border-radius:50%;background:#1a7a4a;cursor:pointer;border:3px solid transparent"></div>
+                <div class="cdot" data-color="#b91c1c" onclick="setColor('#b91c1c',this)" style="width:28px;height:28px;border-radius:50%;background:#b91c1c;cursor:pointer;border:3px solid transparent"></div>
+                <div class="cdot" data-color="#92400e" onclick="setColor('#92400e',this)" style="width:28px;height:28px;border-radius:50%;background:#92400e;cursor:pointer;border:3px solid transparent"></div>
+                <div class="cdot" data-color="#1d4ed8" onclick="setColor('#1d4ed8',this)" style="width:28px;height:28px;border-radius:50%;background:#1d4ed8;cursor:pointer;border:3px solid transparent"></div>
+                <div class="cdot" data-color="#0f766e" onclick="setColor('#0f766e',this)" style="width:28px;height:28px;border-radius:50%;background:#0f766e;cursor:pointer;border:3px solid transparent"></div>
+              </div>
+              <input type="hidden" name="color" id="colorInput" value="#561d9c">
+            </div>
           </div>
-        </div>
-        <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
-          <i class="bi bi-plus-lg"></i> Crear inventario
-        </button>
-      </form>
+          <div class="fi-group" style="margin-bottom:1rem">
+            <label>Descripcion</label>
+            <textarea name="descripcion" rows="2" placeholder="Describe que contiene este inventario..."
+              style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+          </div>
+          <div id="camposTemplate" style="display:none;border-top:1px solid #f0eaf7;padding-top:1rem;margin-bottom:1rem">
+            <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#8b3fe3;margin-bottom:.6rem">Campos que se crearan automaticamente</div>
+            <div id="listaCampos" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+          </div>
+          <div style="display:flex;gap:.75rem;justify-content:space-between;margin-top:1.25rem">
+            <button type="button" onclick="document.getElementById('paso1').style.display='block';document.getElementById('paso2').style.display='none'"
+              class="btn-act btn-edit" style="padding:.6rem 1.25rem"><i class="bi bi-arrow-left"></i> Cambiar tipo</button>
+            <button type="submit" style="padding:.6rem 1.75rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer">
+              <i class="bi bi-plus-lg"></i> Crear inventario</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+.tcard:hover{border-color:#8b3fe3!important;box-shadow:0 4px 16px rgba(86,29,156,.12);transform:translateY(-2px)}
+.tcard.sel{border-color:#561d9c!important;background:#f8f4ff!important}
+</style>
+
 <script>
-function selectColor(el, color) {
-  document.querySelectorAll(".color-opt").forEach(d => d.style.border = "3px solid transparent");
-  el.style.border = "3px solid #2d0060";
-  document.querySelectorAll("input[name=color]").forEach(r => r.checked = r.value === color);
+const TEMPLATES = {
+  tecnologia:  {label:"Tecnologia",   campos:["Numero de serie","Ubicacion","Responsable","Estado","Recibido por"]},
+  restaurante: {label:"Restaurante",   campos:["Unidad","Proveedor","Fecha de vencimiento","Recibido por"]},
+  taller:      {label:"Taller",        campos:["Numero de serie","Ubicacion","Estado","Ultimo mantenimiento","Responsable"]},
+  ropa:        {label:"Ropa/Tienda",   campos:["Talla","Color","SKU","Proveedor"]},
+  general:     {label:"General",       campos:[]}
+};
+function selectTemplate(tipo, el) {
+  document.querySelectorAll('.tcard').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('template_tipo').value = tipo;
+  document.getElementById('formTitle').innerHTML = '<i class="bi bi-boxes"></i> ' + TEMPLATES[tipo].label;
+  const campos = TEMPLATES[tipo].campos;
+  if(campos.length > 0) {
+    document.getElementById('listaCampos').innerHTML = campos.map(c=>
+      '<span style="background:#f0e8ff;color:#561d9c;padding:.2rem .7rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid #ddd0f7">'+c+'</span>'
+    ).join('');
+    document.getElementById('camposTemplate').style.display = 'block';
+  } else {
+    document.getElementById('camposTemplate').style.display = 'none';
+  }
+  document.getElementById('paso1').style.display = 'none';
+  document.getElementById('paso2').style.display = 'block';
 }
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelector(".color-opt").style.border = "3px solid #2d0060";
-});
+function setColor(color, el) {
+  document.querySelectorAll('.cdot').forEach(d=>d.style.border='3px solid transparent');
+  el.style.border = '3px solid #2d0060';
+  document.getElementById('colorInput').value = color;
+}
 </script>
 {% endblock %}

@@ -1,0 +1,94 @@
+{% extends "panel_base.html" %}
+{% block title %}Escanear — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-upc-scan"></i> Escanear codigo</div>
+    <a href="{{ url_for('inventario', inv_id=inv.id) }}" class="btn-act btn-edit">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-camera"></i> Camara</h5></div>
+    <div style="padding:1.25rem;text-align:center">
+      <div id="reader" style="width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden"></div>
+      <div id="scanResult" style="margin-top:1rem;font-size:.9rem;color:#9c7fc0">Apunta la camara al codigo de barras</div>
+    </div>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-keyboard"></i> Ingresar manualmente</h5></div>
+    <div style="padding:1.25rem;display:flex;gap:.75rem">
+      <input type="text" id="codigoManual" placeholder="Ingresa el codigo..."
+        style="flex:1;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+      <button onclick="buscarCodigo(document.getElementById('codigoManual').value)"
+        style="padding:.6rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer">
+        Buscar
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  <div id="resultCard" class="panel-card" style="display:none">
+    <div class="panel-card-header"><h5><i class="bi bi-check-circle"></i> Producto encontrado</h5></div>
+    <div style="padding:1.5rem">
+      <div id="resultNombre" style="font-size:1.1rem;font-weight:800;color:#2d0060;margin-bottom:.5rem"></div>
+      <div id="resultInfo" style="font-size:.88rem;color:#9c7fc0;margin-bottom:1rem"></div>
+      <a id="resultLink" href="#"
+        style="display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:10px;font-size:.85rem;font-weight:700;text-decoration:none">
+        <i class="bi bi-eye"></i> Ver ficha completa
+      </a>
+    </div>
+  </div>
+
+  <div id="noResult" class="panel-card" style="display:none">
+    <div style="padding:2rem;text-align:center;color:#9c7fc0">
+      <div style="font-size:1.5rem;margin-bottom:.5rem">🔍</div>
+      <div style="font-weight:600;color:#2d0060">Producto no encontrado</div>
+      <div style="font-size:.82rem;margin-top:.25rem">Este codigo no esta registrado en el inventario</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+let scanning = false;
+
+function buscarCodigo(codigo) {
+  if (!codigo) return;
+  fetch('/inventario/buscar_codigo?codigo=' + encodeURIComponent(codigo))
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('noResult').style.display = 'none';
+      if (data.encontrado) {
+        document.getElementById('resultNombre').textContent = data.nombre;
+        document.getElementById('resultInfo').textContent = 'Categoria: ' + (data.categoria || '—') + ' · Cantidad: ' + data.cantidad;
+        document.getElementById('resultLink').href = data.url;
+        document.getElementById('resultCard').style.display = 'block';
+      } else {
+        document.getElementById('noResult').style.display = 'block';
+      }
+    });
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: { width: 250, height: 250 } },
+  (decodedText) => {
+    if (!scanning) {
+      scanning = true;
+      document.getElementById('scanResult').textContent = 'Codigo: ' + decodedText;
+      buscarCodigo(decodedText);
+      setTimeout(() => { scanning = false; }, 3000);
+    }
+  },
+  (err) => {}
+).catch(err => {
+  document.getElementById('scanResult').textContent = 'No se pudo acceder a la camara. Usa el ingreso manual.';
+});
+</script>
+{% endblock %}

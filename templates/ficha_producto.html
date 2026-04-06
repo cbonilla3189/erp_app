@@ -1,0 +1,84 @@
+{% extends "panel_base.html" %}
+{% block title %}Ficha — {{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0">
+      <i class="bi bi-card-text"></i> Ficha de producto
+    </div>
+    <a href="{{ url_for('inventario', inv_id=producto.inventario_id) }}" class="btn-act btn-edit">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr auto;gap:1.25rem;margin-bottom:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5><i class="bi bi-box-seam"></i> {{ producto.nombre }}</h5>
+        <span class="count">ID #{{ producto.id }}</span>
+      </div>
+      <div style="padding:1.5rem">
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600;width:40%">Inventario</td>
+            <td style="padding:.6rem 0;color:#1a0035;font-weight:600">{{ inventario.nombre if inventario else '—' }}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Categoria</td>
+            <td style="padding:.6rem 0;color:#1a0035">{{ producto.categoria or '—' }}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Cantidad</td>
+            <td style="padding:.6rem 0;font-weight:700;color:{% if producto.cantidad == 0 %}#b91c1c{% elif producto.cantidad <= (producto.stock_minimo or 5) %}#92400e{% else %}#1a7a4a{% endif %}">
+              {{ producto.cantidad }}
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Precio</td>
+            <td style="padding:.6rem 0;color:#1a0035">${{ "%.2f"|format(producto.precio) }}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Stock minimo</td>
+            <td style="padding:.6rem 0;color:#1a0035">{{ producto.stock_minimo or 5 }}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Cod. barras</td>
+            <td style="padding:.6rem 0;color:#1a0035;font-family:monospace">{{ producto.codigo_barras or '—' }}</td>
+          </tr>
+          <tr>
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Agregado</td>
+            <td style="padding:.6rem 0;color:#1a0035">{{ producto.creado_en.strftime('%d/%m/%Y') if producto.creado_en else '—' }}</td>
+          </tr>
+          {% for campo in campos %}
+          <tr style="border-top:1px solid #f0eaf7">
+            <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">{{ campo.nombre }}</td>
+            <td style="padding:.6rem 0;color:#1a0035">{{ valores.get(campo.id, '—') }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+        <div style="display:flex;gap:.75rem;margin-top:1.25rem">
+          <a href="{{ url_for('inventario_editar', producto_id=producto.id) }}"
+            style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:10px;font-size:.85rem;font-weight:700;text-decoration:none">
+            <i class="bi bi-pencil"></i> Editar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR -->
+    <div class="panel-card" style="min-width:180px;text-align:center">
+      <div class="panel-card-header"><h5><i class="bi bi-qr-code"></i> QR</h5></div>
+      <div style="padding:1.25rem">
+        <img src="{{ url_for('generar_qr', producto_id=producto.id) }}"
+          style="width:150px;height:150px;border-radius:8px">
+        <div style="font-size:.72rem;color:#9c7fc0;margin-top:.5rem">Escanea para ver ficha</div>
+        <a href="{{ url_for('generar_qr', producto_id=producto.id) }}" download="qr_{{ producto.id }}.png"
+          style="display:inline-flex;align-items:center;gap:.3rem;margin-top:.75rem;padding:.35rem .85rem;background:#f0e8ff;color:#561d9c;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none">
+          <i class="bi bi-download"></i> Descargar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

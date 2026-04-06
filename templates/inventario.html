@@ -5,11 +5,19 @@
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
   <div class="section-title" style="margin-bottom:0">
-    <i class="bi bi-box-seam"></i> Inventario
+    <i class="bi bi-box-seam"></i> {{ inv_actual.nombre }}
   </div>
-  <a href="{{ url_for('campos_personalizados') }}" class="btn-act btn-edit">
-    <i class="bi bi-sliders"></i> Campos personalizados
-  </a>
+  <div style="display:flex;gap:.5rem">
+    <a href="{{ url_for('escanear', inv_id=inv_actual.id) }}" class="btn-act btn-edit">
+      <i class="bi bi-upc-scan"></i> Escanear
+    </a>
+    <a href="{{ url_for('categorias', inv_id=inv_actual.id) }}" class="btn-act btn-edit">
+      <i class="bi bi-tags"></i> Categorias
+    </a>
+    <a href="{{ url_for('campos_personalizados') }}" class="btn-act btn-edit">
+      <i class="bi bi-sliders"></i> Campos
+    </a>
+  </div>
 </div>
 
 <!-- Formulario agregar producto -->
@@ -37,8 +45,12 @@
           <input type="number" name="precio" placeholder="0.00" min="0" step="0.01" value="0">
         </div>
         <div class="fi-group">
-          <label>Stock mínimo</label>
+          <label>Stock minimo</label>
           <input type="number" name="stock_minimo" placeholder="5" min="0" value="5">
+        </div>
+        <div class="fi-group">
+          <label>Cod. barras</label>
+          <input type="text" name="codigo_barras" placeholder="Escanea o escribe">
         </div>
         <button type="submit" style="padding:.62rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;height:40px">
           <i class="bi bi-plus-lg"></i> Agregar
@@ -100,6 +112,7 @@
           {% for campo in campos %}
           <th>{{ campo.nombre }}</th>
           {% endfor %}
+          <th>QR</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -119,6 +132,12 @@
           {% for campo in campos %}
           <td>{{ valores.get(p.id, {}).get(campo.id, '—') }}</td>
           {% endfor %}
+          <td>
+            <a href="{{ url_for('ficha_producto', producto_id=p.id) }}"
+              style="display:inline-flex;align-items:center;gap:.25rem;padding:.28rem .55rem;background:#f0e8ff;color:#561d9c;border-radius:7px;font-size:.75rem;font-weight:600;text-decoration:none">
+              <i class="bi bi-qr-code"></i>
+            </a>
+          </td>
           <td>
             <div style="display:flex;gap:.35rem">
               <a href="{{ url_for('inventario_editar', producto_id=p.id) }}" class="btn-act btn-edit">

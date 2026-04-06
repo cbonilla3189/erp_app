@@ -74,7 +74,10 @@ class Producto(db.Model):
     precio      = db.Column(db.Float, default=0)
     creado_en   = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     stock_minimo  = db.Column(db.Integer, default=5)
+    codigo_barras = db.Column(db.String(100))
     inventario_id = db.Column(db.Integer, db.ForeignKey("inventarios.id"))
+    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
+    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
 
 
 
@@ -90,6 +93,20 @@ class Inventario(db.Model):
     creado_en   = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     productos   = db.relationship("Producto", backref="inventario", lazy=True)
 
+
+class Categoria(db.Model):
+    __tablename__ = "categorias"
+    id            = db.Column(db.Integer, primary_key=True)
+    inventario_id = db.Column(db.Integer, db.ForeignKey("inventarios.id"), nullable=False)
+    nombre        = db.Column(db.String(100), nullable=False)
+    descripcion   = db.Column(db.Text)
+    tipo          = db.Column(db.String(20), default="stock")
+    stock_minimo  = db.Column(db.Integer, default=5)
+    color         = db.Column(db.String(7), default="#561d9c")
+    creado_en     = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    productos     = db.relationship("Producto", backref="categoria_obj", lazy=True)
+
+
 class CampoPersonalizado(db.Model):
     __tablename__ = "campos_personalizados"
     id         = db.Column(db.Integer, primary_key=True)
@@ -99,6 +116,8 @@ class CampoPersonalizado(db.Model):
     opciones   = db.Column(db.Text)
     creado_en     = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     inventario_id = db.Column(db.Integer, db.ForeignKey("inventarios.id"))
+    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
+    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
     valores    = db.relationship("ValorCampo", backref="campo", lazy=True, cascade="all, delete-orphan")
 
 
@@ -366,6 +385,19 @@ def dashboard():
 @app.route("/inventario", methods=["GET", "POST"])
 @app.route("/inventario/<int:inv_id>", methods=["GET", "POST"])
 def inventario(inv_id=None):
+    # Si no hay cat_id redirigir a categorias
+    cat_id = request.args.get("cat") or request.form.get("cat_id")
+    if not cat_id and request.method == "GET":
+        if "user_id" not in session:
+            return redirect(url_for("login"))
+        user = Usuario.query.get(session["user_id"])
+        empresa = user.empresa or ""
+        inventarios = Inventario.query.filter_by(empresa=empresa).all()
+        if not inventarios:
+            return redirect(url_for("lista_inventarios"))
+        inv_actual = Inventario.query.get(inv_id) if inv_id else inventarios[0]
+        return redirect(url_for("categorias", inv_id=inv_actual.id))
+    
     if "user_id" not in session:
         return redirect(url_for("login"))
     user = Usuario.query.get(session["user_id"])
@@ -386,10 +418,12 @@ def inventario(inv_id=None):
         if not nombre:
             flash("Debe ingresar un nombre.", "warning")
         else:
-            stock_minimo = int(request.form.get("stock_minimo", 5))
+            stock_minimo  = int(request.form.get("stock_minimo", 5))
+            codigo_barras = request.form.get("codigo_barras", "").strip()
             p = Producto(user_id=session["user_id"], nombre=nombre,
                          categoria=categoria, cantidad=cantidad, precio=precio,
-                         stock_minimo=stock_minimo, inventario_id=inv_actual.id)
+                         stock_minimo=stock_minimo, inventario_id=inv_actual.id,
+                         codigo_barras=codigo_barras if codigo_barras else None)
             db.session.add(p)
             db.session.flush()
             campos = CampoPersonalizado.query.filter_by(inventario_id=inv_actual.id).all()
@@ -401,11 +435,13 @@ def inventario(inv_id=None):
             flash("Producto agregado.", "success")
     productos = Producto.query.filter_by(inventario_id=inv_actual.id).order_by(Producto.creado_en.desc()).all()
     campos = CampoPersonalizado.query.filter_by(inventario_id=inv_actual.id).all()
+    categorias_inv = Categoria.query.filter_by(inventario_id=inv_actual.id).all()
     valores = {}
     for v in ValorCampo.query.all():
         valores.setdefault(v.producto_id, {})[v.campo_id] = v.valor
     return render_template("inventario.html", productos=productos, campos=campos,
-                           valores=valores, inv_actual=inv_actual, inventarios=inventarios)
+                           valores=valores, inv_actual=inv_actual, inventarios=inventarios,
+                           categorias_inv=categorias_inv)
 
 
 @app.route("/inventario/editar/<int:producto_id>", methods=["GET", "POST"])
@@ -676,9 +712,10 @@ def nuevo_inventario():
         return redirect(url_for("login"))
     if request.method == "POST":
         user = Usuario.query.get(session["user_id"])
-        nombre      = request.form.get("nombre", "").strip().title()
-        descripcion = request.form.get("descripcion", "").strip()
-        color       = request.form.get("color", "#561d9c")
+        nombre       = request.form.get("nombre", "").strip().title()
+        descripcion  = request.form.get("descripcion", "").strip()
+        color        = request.form.get("color", "#561d9c")
+        template_tipo = request.form.get("template_tipo", "general")
         inv = Inventario(
             empresa=user.empresa or "",
             nombre=nombre,
@@ -687,8 +724,31 @@ def nuevo_inventario():
             creado_por=user.id
         )
         db.session.add(inv)
+        db.session.flush()
+
+        templates_campos = {
+            "tecnologia":  [("Numero de serie","texto"),("Ubicacion","texto"),("Responsable","texto"),("Estado","dropdown"),("Recibido por","texto")],
+            "restaurante": [("Unidad","dropdown"),("Proveedor","texto"),("Fecha de vencimiento","fecha"),("Recibido por","texto")],
+            "taller":      [("Numero de serie","texto"),("Ubicacion","texto"),("Estado","dropdown"),("Ultimo mantenimiento","fecha"),("Responsable","texto")],
+            "ropa":        [("Talla","texto"),("Color","texto"),("SKU","texto"),("Proveedor","texto")],
+            "general":     []
+        }
+        opciones_estado = "Activo,En reparacion,De baja,En deposito"
+        opciones_unidad = "kg,g,litros,ml,unidad,caja,paquete"
+        for nombre_campo, tipo in templates_campos.get(template_tipo, []):
+            opciones = ""
+            if nombre_campo == "Estado": opciones = opciones_estado
+            if nombre_campo == "Unidad": opciones = opciones_unidad
+            campo = CampoPersonalizado(
+                empresa=user.empresa or "",
+                nombre=nombre_campo,
+                tipo=tipo,
+                opciones=opciones,
+                inventario_id=inv.id
+            )
+            db.session.add(campo)
         db.session.commit()
-        flash(f"Inventario '{nombre}' creado.", "success")
+        flash(f"Inventario '{nombre}' creado con campos de template {template_tipo}.", "success")
         return redirect(url_for("lista_inventarios"))
     return render_template("nuevo_inventario.html")
 
@@ -697,14 +757,22 @@ def nuevo_inventario():
 def eliminar_inventario(inv_id):
     if "user_id" not in session:
         return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    if not user.empresa_admin:
+        flash("No tienes permisos para eliminar inventarios.", "danger")
+        return redirect(url_for("lista_inventarios"))
     inv = Inventario.query.get(inv_id)
-    if inv and inv.productos:
+    if not inv:
+        return redirect(url_for("lista_inventarios"))
+    if inv.productos:
         flash("No puedes eliminar un inventario con productos.", "warning")
         return redirect(url_for("lista_inventarios"))
-    if inv:
-        db.session.delete(inv)
-        db.session.commit()
-        flash("Inventario eliminado.", "success")
+    # Eliminar campos personalizados y categorias asociadas
+    CampoPersonalizado.query.filter_by(inventario_id=inv_id).delete()
+    Categoria.query.filter_by(inventario_id=inv_id).delete()
+    db.session.delete(inv)
+    db.session.commit()
+    flash("Inventario eliminado.", "success")
     return redirect(url_for("lista_inventarios"))
 
 
@@ -803,6 +871,167 @@ def registro_invitado():
         flash("Cuenta creada exitosamente. Ya puedes iniciar sesión.", "success")
         return redirect(url_for("login"))
     return render_template("registro_invitado.html", empresa=empresa, correo=correo, token=token)
+
+
+@app.route("/producto/<int:producto_id>/qr")
+def generar_qr(producto_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    import qrcode
+    import io
+    prod = Producto.query.get(producto_id)
+    if not prod:
+        return "Producto no encontrado", 404
+    url = url_for("ficha_producto", producto_id=producto_id, _external=True)
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    from flask import send_file
+    return send_file(buf, mimetype="image/png")
+
+
+@app.route("/producto/<int:producto_id>/ficha")
+def ficha_producto(producto_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    prod = Producto.query.get(producto_id)
+    if not prod:
+        return "Producto no encontrado", 404
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    campos = CampoPersonalizado.query.filter_by(inventario_id=prod.inventario_id).all()
+    valores = {v.campo_id: v.valor for v in ValorCampo.query.filter_by(producto_id=prod.id).all()}
+    inv = Inventario.query.get(prod.inventario_id)
+    return render_template("ficha_producto.html", producto=prod, campos=campos, valores=valores, inventario=inv)
+
+
+@app.route("/inventario/<int:inv_id>/escanear")
+def escanear(inv_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    inv = Inventario.query.get(inv_id)
+    return render_template("escanear.html", inv=inv)
+
+
+@app.route("/inventario/buscar_codigo")
+def buscar_codigo():
+    if "user_id" not in session:
+        return jsonify({"error": "no auth"}), 401
+    codigo = request.args.get("codigo", "").strip()
+    prod = Producto.query.filter_by(codigo_barras=codigo).first()
+    if prod:
+        return jsonify({
+            "encontrado": True,
+            "id": prod.id,
+            "nombre": prod.nombre,
+            "cantidad": prod.cantidad,
+            "categoria": prod.categoria or "",
+            "url": url_for("ficha_producto", producto_id=prod.id)
+        })
+    return jsonify({"encontrado": False})
+
+
+# -----------------------------
+# Categorias
+# -----------------------------
+@app.route("/inventario/<int:inv_id>/categorias")
+def categorias(inv_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    inv = Inventario.query.get(inv_id)
+    cats = Categoria.query.filter_by(inventario_id=inv_id).all()
+    return render_template("categorias.html", inv=inv, categorias=cats)
+
+
+@app.route("/inventario/<int:inv_id>/categorias/nueva", methods=["GET","POST"])
+def nueva_categoria(inv_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    inv = Inventario.query.get(inv_id)
+    if request.method == "POST":
+        nombre      = request.form.get("nombre","").strip().title()
+        descripcion = request.form.get("descripcion","").strip()
+        tipo        = request.form.get("tipo","stock")
+        stock_min   = int(request.form.get("stock_minimo", 5)) if tipo == "stock" else 0
+        color       = request.form.get("color","#561d9c")
+        cat = Categoria(inventario_id=inv_id, nombre=nombre, descripcion=descripcion,
+                        tipo=tipo, stock_minimo=stock_min, color=color)
+        db.session.add(cat)
+        db.session.commit()
+        flash(f"Categoria '{nombre}' creada.", "success")
+        return redirect(url_for("categorias", inv_id=inv_id))
+    return render_template("nueva_categoria.html", inv=inv)
+
+
+@app.route("/inventario/<int:inv_id>/categorias/<int:cat_id>/eliminar", methods=["POST"])
+def eliminar_categoria(inv_id, cat_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    cat = Categoria.query.get(cat_id)
+    if cat and len(cat.productos) == 0:
+        db.session.delete(cat)
+        db.session.commit()
+        flash("Categoria eliminada.", "success")
+    else:
+        flash("No puedes eliminar una categoria con productos.", "warning")
+    return redirect(url_for("categorias", inv_id=inv_id))
+
+
+@app.route("/inventario/<int:inv_id>/categoria/<int:cat_id>", methods=["GET", "POST"])
+def productos_categoria(inv_id, cat_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    inv = Inventario.query.get(inv_id)
+    cat = Categoria.query.get(cat_id)
+    if not inv or not cat:
+        return redirect(url_for("lista_inventarios"))
+
+    if request.method == "POST":
+        nombre        = request.form.get("nombre", "").strip()
+        precio        = float(request.form.get("precio") or 0)
+        codigo_barras = request.form.get("codigo_barras", "").strip()
+        if cat.tipo == "activo":
+            cantidad     = 1
+            stock_minimo = 0
+        else:
+            cantidad     = int(request.form.get("cantidad", 0))
+            stock_minimo = int(request.form.get("stock_minimo", cat.stock_minimo or 5))
+
+        if nombre:
+            p = Producto(
+                user_id=session["user_id"],
+                nombre=nombre,
+                categoria=cat.nombre,
+                categoria_id=cat_id,
+                cantidad=cantidad,
+                precio=precio,
+                stock_minimo=stock_minimo,
+                inventario_id=inv_id,
+                codigo_barras=codigo_barras if codigo_barras else None
+            )
+            db.session.add(p)
+            db.session.flush()
+            campos = CampoPersonalizado.query.filter_by(inventario_id=inv_id).all()
+            for campo in campos:
+                valor = request.form.get(f"campo_{campo.id}", "").strip()
+                if valor:
+                    db.session.add(ValorCampo(producto_id=p.id, campo_id=campo.id, valor=valor))
+            db.session.commit()
+            flash("Producto agregado.", "success")
+        return redirect(url_for("productos_categoria", inv_id=inv_id, cat_id=cat_id))
+
+    productos = Producto.query.filter_by(inventario_id=inv_id, categoria_id=cat_id).order_by(Producto.creado_en.desc()).all()
+    campos = CampoPersonalizado.query.filter_by(inventario_id=inv_id).all()
+    valores = {}
+    for v in ValorCampo.query.all():
+        valores.setdefault(v.producto_id, {})[v.campo_id] = v.valor
+    return render_template("productos_categoria.html",
+        inv=inv, cat=cat, productos=productos,
+        campos=campos, valores=valores)
+
 
 # -----------------------------
 # Run
