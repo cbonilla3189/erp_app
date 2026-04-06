@@ -1,0 +1,66 @@
+{% extends "panel_base.html" %}
+{% block title %}Reporte por {{ campo.nombre }} — aruna{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0">
+    <i class="bi bi-filter-square"></i> Reporte por: {{ campo.nombre }}
+  </div>
+  <a href="{{ url_for('reportes') }}" class="btn-act btn-edit">
+    <i class="bi bi-arrow-left"></i> Volver a reportes
+  </a>
+</div>
+
+{% if grupos %}
+  {% for valor, productos in grupos.items() %}
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-tag"></i> {{ valor }}</h5>
+      <span class="count">{{ productos|length }} producto(s) · ${{ "%.2f"|format(productos|sum(attribute="precio") ) }}</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="aruna-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Cantidad</th>
+            <th>Precio unit.</th>
+            <th>Valor total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in productos %}
+          <tr>
+            <td style="font-weight:600">{{ p.nombre }}</td>
+            <td>{{ p.categoria or "—" }}</td>
+            <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% elif p.cantidad <= (p.stock_minimo or 5) %}#92400e{% else %}#1a7a4a{% endif %}">{{ p.cantidad }}</td>
+            <td>${{ "%.2f"|format(p.precio) }}</td>
+            <td style="font-weight:600">${{ "%.2f"|format(p.precio * p.cantidad) }}</td>
+            <td>
+              {% if p.cantidad == 0 %}
+                <span class="badge badge-no">Sin stock</span>
+              {% elif p.cantidad <= (p.stock_minimo or 5) %}
+                <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
+              {% else %}
+                <span class="badge badge-ok">OK</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="panel-card">
+  <div style="padding:3rem;text-align:center;color:#9c7fc0">
+    <div style="font-size:2rem;margin-bottom:.5rem">📊</div>
+    <div style="font-size:.9rem;font-weight:600;color:#2d0060">Sin datos para este campo</div>
+    <div style="font-size:.82rem;margin-top:.25rem">Agrega valores al campo "{{ campo.nombre }}" en tus productos.</div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

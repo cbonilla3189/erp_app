@@ -1,0 +1,78 @@
+{% extends "base_register.html" %}
+{% block title %}Unete a {{ empresa }} - aruna{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="login-hero">
+    <h1>Unete a <span>{{ empresa }}</span></h1>
+    <p>Completa tu perfil para acceder a aruna</p>
+  </div>
+  <div class="login-card-wrap">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>Crear tu cuenta</h2>
+        <p>Invitado a <strong style="color:#561d9c">{{ empresa }}</strong></p>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+          <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca">{{ message }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+      <form method="POST">
+        <input type="hidden" name="empresa" value="{{ empresa }}">
+        <input type="hidden" name="correo" value="{{ correo }}">
+        <input type="hidden" name="token" value="{{ token }}">
+        <div style="margin-bottom:1rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Correo electronico</label>
+          <div style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#9c7fc0;background:#f8f5ff">{{ correo }}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Nombre *</label>
+            <input type="text" name="nombre" placeholder="Carlos" required style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Apellido *</label>
+            <input type="text" name="apellido" placeholder="Bonilla" required style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Usuario *</label>
+            <input type="text" name="username" placeholder="nombre_usuario" required style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Telefono</label>
+            <input type="text" name="telefono" placeholder="+507 6000-0000" style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Contrasena *</label>
+            <input type="password" name="password" placeholder="••••••••" required style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:700;color:#3d1a6e;display:block;margin-bottom:.3rem">Confirmar *</label>
+            <input type="password" name="confirm_password" placeholder="••••••••" required style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+        </div>
+        <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+          Crear cuenta y unirme
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+body{background:linear-gradient(160deg,#3b1278 0%,#561d9c 45%,#8b3fe3 80%,#ff6fb5 100%);min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif}
+.login-wrap{max-width:560px;margin:0 auto;padding:2rem 1.5rem 3rem}
+.login-hero{text-align:center;color:#fff;padding:1.5rem 1rem 2rem}
+.login-hero h1{font-size:1.8rem;font-weight:800;margin-bottom:.5rem}
+.login-hero h1 span{color:#ffb3d9}
+.login-hero p{font-size:.9rem;opacity:.85}
+.login-card-wrap{display:flex;justify-content:center}
+.login-card{width:100%;background:rgba(255,255,255,.97);border-radius:20px;padding:2rem 2.25rem;box-shadow:0 24px 60px rgba(30,0,60,.3)}
+.login-header{text-align:center;margin-bottom:1.5rem}
+.login-header h2{font-size:1.4rem;font-weight:800;color:#2d0060}
+.login-header p{font-size:.87rem;color:#7c5fa0;margin-top:.2rem}
+</style>
+{% endblock %}

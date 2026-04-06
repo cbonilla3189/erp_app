@@ -1,0 +1,88 @@
+{% extends "panel_base.html" %}
+{% block title %}Editar producto — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0">
+      <i class="bi bi-pencil-square"></i> Editar producto
+    </div>
+    <a href="{{ url_for('inventario') }}" class="btn-act btn-edit">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-box-seam"></i> {{ producto.nombre }}</h5>
+      <span class="count">ID #{{ producto.id }}</span>
+    </div>
+    <div style="padding:1.75rem">
+      <form method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group">
+            <label>Nombre *</label>
+            <input type="text" name="nombre" value="{{ producto.nombre }}" required>
+          </div>
+          <div class="fi-group">
+            <label>Categoria</label>
+            <input type="text" name="categoria" value="{{ producto.categoria or '' }}">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group">
+            <label>Cantidad</label>
+            <input type="number" name="cantidad" value="{{ producto.cantidad }}" min="0">
+          </div>
+          <div class="fi-group">
+            <label>Precio ($)</label>
+            <input type="number" name="precio" value="{{ producto.precio }}" min="0" step="0.01">
+          </div>
+          <div class="fi-group">
+            <label>Stock minimo</label>
+            <input type="number" name="stock_minimo" value="{{ producto.stock_minimo or 5 }}" min="0">
+          </div>
+        </div>
+        {% if campos %}
+        <div style="border-top:1px solid #f0eaf7;padding-top:1rem;margin-bottom:1rem">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#8b3fe3;margin-bottom:.75rem">Campos personalizados</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+            {% for campo in campos %}
+            <div class="fi-group">
+              <label>{{ campo.nombre }}</label>
+              {% set valor_actual = valores.get(campo.id, '') %}
+              {% if campo.tipo == 'dropdown' %}
+              <select name="campo_{{ campo.id }}">
+                <option value="">Seleccionar</option>
+                {% for op in campo.opciones.split(',') %}
+                <option value="{{ op.strip() }}" {% if op.strip() == valor_actual %}selected{% endif %}>{{ op.strip() }}</option>
+                {% endfor %}
+              </select>
+              {% elif campo.tipo == 'fecha' %}
+              <input type="date" name="campo_{{ campo.id }}" value="{{ valor_actual }}">
+              {% elif campo.tipo == 'numero' %}
+              <input type="number" name="campo_{{ campo.id }}" value="{{ valor_actual }}" step="any">
+              {% else %}
+              <input type="text" name="campo_{{ campo.id }}" value="{{ valor_actual }}">
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+          <a href="{{ url_for('inventario') }}" class="btn-act btn-edit" style="padding:.5rem 1.25rem">Cancelar</a>
+          <button type="submit" style="padding:.5rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer">
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input,.fi-group select{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none}
+.fi-group input:focus,.fi-group select:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.1)}
+</style>
+{% endblock %}

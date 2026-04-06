@@ -59,6 +59,7 @@
 
     .sidebar {
       width: 220px;
+      transition: transform 0.25s ease, width 0.25s ease;
       background: linear-gradient(180deg, #2d0060 0%, #561d9c 60%, #7b2fd4 100%);
       min-height: calc(100vh - 52px);
       position: fixed;
@@ -118,6 +119,7 @@
 
     .main-content {
       margin-left: 220px;
+      transition: margin-left 0.25s ease;
       flex: 1;
       padding: 1.75rem 2rem;
     }
@@ -168,6 +170,8 @@
     .app-section { display: none; }
     .app-section.active { display: block; }
 
+    .sidebar.collapsed { transform: translateX(-220px); }
+    .main-content.expanded { margin-left: 0; }
     @media (max-width: 768px) {
       .sidebar { display: none; }
       .main-content { margin-left: 0; padding: 1rem; }
@@ -177,7 +181,12 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-brand">&#8734; <span>aruna</span></div>
+  <div style="display:flex;align-items:center;gap:.75rem">
+      <button id="sidebarToggle" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:.3rem;border-radius:8px;color:#561d9c;font-size:1.1rem;display:flex;align-items:center;transition:background .15s" title="Ocultar/mostrar menú">
+        <i class="bi bi-layout-sidebar" id="toggleIcon"></i>
+      </button>
+      <div class="topbar-brand">&#8734; <span>aruna</span></div>
+    </div>
   <div class="topbar-right">
     <span>{{ usuario if usuario else "" }}</span>
     {% if session.get("user_id") %}
@@ -219,11 +228,14 @@
         <a href="{{ url_for('dashboard') }}" class="nav-item-link {% if request.path == '/dashboard' %}active{% endif %}">
           <i class="bi bi-grid"></i> Dashboard
         </a>
-        <a href="{{ url_for('inventario') }}" class="nav-item-link {% if request.path == '/inventario' %}active{% endif %}">
-          <i class="bi bi-box-seam"></i> Inventario
+        <a href="{{ url_for('lista_inventarios') }}" class="nav-item-link {% if '/inventario' in request.path %}active{% endif %}">
+          <i class="bi bi-boxes"></i> Inventarios
         </a>
         <a href="{{ url_for('mi_empresa') }}" class="nav-item-link {% if request.path == '/mi_empresa' %}active{% endif %}">
           <i class="bi bi-building"></i> Mi Empresa
+        </a>
+        <a href="{{ url_for('reportes') }}" class="nav-item-link {% if request.path == '/reportes' %}active{% endif %}">
+          <i class="bi bi-bar-chart-line"></i> Reportes
         </a>
       {% endif %}
     {% endif %}
@@ -236,6 +248,16 @@
 </div>
 
 <script>
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const main = document.querySelector('.main-content');
+  const icon = document.getElementById('toggleIcon');
+  sidebar.classList.toggle('collapsed');
+  main.classList.toggle('expanded');
+  icon.className = sidebar.classList.contains('collapsed')
+    ? 'bi bi-layout-sidebar-reverse'
+    : 'bi bi-layout-sidebar';
+}
 function showSection(name, btn) {
   document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item-link').forEach(b => b.classList.remove('active'));

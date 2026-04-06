@@ -1,0 +1,78 @@
+{% extends "panel_base.html" %}
+{% block title %}Editar usuario — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:680px;margin:0 auto">
+
+  <div class="section-title">
+    <i class="bi bi-pencil-square"></i> Editar usuario
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-person"></i> {{ user_data.nombre }} {{ user_data.apellido }}</h5>
+      <span class="count">ID #{{ user_data.id }}</span>
+    </div>
+    <div style="padding:1.75rem">
+
+      <form method="POST">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="nombre" value="{{ user_data.nombre }}" required>
+          </div>
+          <div class="form-group">
+            <label>Apellido</label>
+            <input type="text" name="apellido" value="{{ user_data.apellido }}" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" name="correo" value="{{ user_data.correo }}" required>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" name="telefono" value="{{ user_data.telefono or '' }}">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem" class="form-group">
+          <label>Empresa</label>
+          <input type="text" name="empresa" value="{{ user_data.empresa or '' }}">
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.75rem">
+          <div class="form-group">
+            <label>RUC</label>
+            <input type="text" name="ruc" value="{{ user_data.ruc or '' }}" placeholder="8-888-8888">
+          </div>
+          <div class="form-group">
+            <label>DV</label>
+            <input type="text" name="dv" value="{{ user_data.dv or '' }}" placeholder="55">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+          <a href="{{ url_for('admin_panel') }}" class="btn-act btn-edit" style="padding:.5rem 1.25rem">
+            <i class="bi bi-arrow-left"></i> Cancelar
+          </a>
+          <button type="submit" style="padding:.5rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem">
+            <i class="bi bi-check-lg"></i> Guardar cambios
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-group { display:flex; flex-direction:column; gap:.3rem; }
+.form-group label { font-size:.78rem; font-weight:700; color:#3d1a6e; text-transform:uppercase; letter-spacing:.06em; }
+.form-group input { padding:.6rem .85rem; border:1.5px solid #e2d6f3; border-radius:10px; font-size:.9rem; color:#1a0035; background:#fdf9ff; outline:none; transition:border-color .2s; }
+.form-group input:focus { border-color:#8b3fe3; box-shadow:0 0 0 3px rgba(139,63,227,.1); background:#fff; }
+</style>
+{% endblock %}

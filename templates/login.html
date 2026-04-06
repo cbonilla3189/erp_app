@@ -1,24 +1,108 @@
-{% extends "auth_base.html" %}
-{% block title %}Iniciar sesión{% endblock %}
+{% extends "base_register.html" %}
+{% block title %}Iniciar sesión — aruna{% endblock %}
 
 {% block content %}
-<h2 class="auth-title">Iniciar sesión</h2>
-
-<form method="POST" action="/login">
-  <div class="mb-3">
-    <label for="username" class="form-label">Usuario</label>
-    <input type="text" class="form-control" id="username" name="username" required>
+<div class="login-wrap">
+  <div class="login-hero">
+    <h1>Bienvenido a <span>aruna</span></h1>
+    <p>Accede a tu plataforma empresarial</p>
+    <div class="hero-features">
+      <span>📦 Inventario</span>
+      <span>📣 CRM</span>
+      <span>📧 Campañas</span>
+      <span>🤖 Automatización</span>
+    </div>
   </div>
 
-  <div class="mb-3">
-    <label for="password" class="form-label">Contraseña</label>
-    <input type="password" class="form-control" id="password" name="password" required>
-  </div>
+  <div class="login-card-wrap">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>Iniciar sesión</h2>
+        <p>Ingresa tus credenciales para continuar</p>
+      </div>
 
-  <button type="submit" class="btn btn-primary">Entrar</button>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-  <div class="text-center mt-3">
-    <small>¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate</a></small>
+      <form method="POST" action="/login" novalidate>
+
+        <div class="form-group">
+          <label for="username">Usuario o correo electrónico <span class="req">*</span></label>
+          <input id="username" type="text" name="username" placeholder="usuario o correo@empresa.com" required autofocus>
+        </div>
+
+        <div class="form-group" style="margin-top:.9rem">
+          <label for="password">Contraseña <span class="req">*</span></label>
+          <div class="input-pw">
+            <input id="password" type="password" name="password" placeholder="••••••••" required>
+            <button type="button" class="toggle-pw" data-target="password">👁</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login-submit">
+          Iniciar sesión
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="login-footer">
+          <a href="{{ url_for('home') }}" class="btn-back">← Volver al inicio</a><br><br>
+          ¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate</a>
+        </div>
+
+      </form>
+    </div>
   </div>
-</form>
+</div>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(160deg,#3b1278 0%,#561d9c 45%,#8b3fe3 80%,#ff6fb5 100%);min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif}
+.login-wrap{max-width:520px;margin:0 auto;padding:2.5rem 1.5rem 3rem}
+.login-hero{text-align:center;color:#fff;padding:2rem 1rem 2.5rem}
+.login-hero h1{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.login-hero h1 span{color:#ffb3d9}
+.login-hero p{font-size:.95rem;opacity:.85;margin-bottom:1.25rem}
+.hero-features{display:flex;justify-content:center;flex-wrap:wrap;gap:.5rem}
+.hero-features span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:.3rem .85rem;border-radius:20px;font-size:.82rem;color:#fff}
+.login-card-wrap{display:flex;justify-content:center}
+.login-card{width:100%;background:rgba(255,255,255,.97);border-radius:20px;padding:2.25rem 2.5rem;box-shadow:0 24px 60px rgba(30,0,60,.3)}
+.login-header{text-align:center;margin-bottom:1.75rem}
+.login-header h2{font-size:1.5rem;font-weight:800;color:#2d0060}
+.login-header p{font-size:.87rem;color:#7c5fa0;margin-top:.2rem}
+.form-group{display:flex;flex-direction:column;gap:.3rem}
+.form-group label{font-size:.8rem;font-weight:600;color:#3d1a6e}
+.req{color:#e040a0}
+.form-group input{width:100%;padding:.65rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.12);background:#fff}
+.form-group input::placeholder{color:#c4b4d8}
+.input-pw{position:relative}
+.input-pw input{padding-right:2.4rem}
+.toggle-pw{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.95rem;opacity:.45;transition:opacity .2s}
+.toggle-pw:hover{opacity:1}
+.btn-login-submit{width:100%;display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.85rem;margin-top:1.5rem;margin-bottom:1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(86,29,156,.35);transition:transform .15s,box-shadow .15s}
+.btn-login-submit:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(86,29,156,.4)}
+.alert{padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem}
+.alert-success{background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3}
+.alert-danger{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.alert-warning{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.login-footer{text-align:center;font-size:.85rem;color:#7c5fa0}
+.login-footer a{color:#7c22e0;font-weight:700;text-decoration:none}
+.login-footer a:hover{text-decoration:underline}
+.btn-back{display:inline-block;margin-bottom:.75rem;font-size:.82rem}
+</style>
+
+<script>
+document.querySelectorAll('.toggle-pw').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = document.getElementById(btn.dataset.target);
+    t.type = t.type === 'password' ? 'text' : 'password';
+    btn.textContent = t.type === 'password' ? '👁' : '🙈';
+  });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,147 @@
+{% extends "panel_base.html" %}
+{% block title %}Mi Empresa — aruna{% endblock %}
+
+{% block content %}
+<div class="section-title"><i class="bi bi-building"></i> Mi Empresa</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for category, message in messages %}
+    <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
+      {% if category=='success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
+      {% elif category=='danger' %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca
+      {% else %}background:#fffbeb;color:#92400e;border:1px solid #fde68a{% endif %}">
+      {{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+
+  <!-- Datos de la empresa -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-info-circle"></i> Información general</h5>
+    </div>
+    <div style="padding:1.5rem">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+        <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#561d9c,#8b3fe3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;font-weight:800;flex-shrink:0">
+          {{ empresa[0]|upper if empresa else "?" }}
+        </div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:#2d0060">{{ empresa or "Sin empresa" }}</div>
+          <div style="font-size:.8rem;color:#9c7fc0">Empresa registrada en aruna</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+        <tr style="border-bottom:1px solid #f0eaf7">
+          <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600;width:40%">Nombre</td>
+          <td style="padding:.6rem 0;color:#1a0035;font-weight:600">{{ user_data.empresa or "—" }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0eaf7">
+          <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">RUC</td>
+          <td style="padding:.6rem 0;color:#1a0035">{{ user_data.ruc or "—" }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0eaf7">
+          <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">DV</td>
+          <td style="padding:.6rem 0;color:#1a0035">{{ user_data.dv or "—" }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0eaf7">
+          <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Teléfono</td>
+          <td style="padding:.6rem 0;color:#1a0035">{{ user_data.telefono or "—" }}</td>
+        </tr>
+        <tr>
+          <td style="padding:.6rem 0;color:#9c7fc0;font-weight:600">Correo</td>
+          <td style="padding:.6rem 0;color:#1a0035">{{ user_data.correo }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Usuarios de la empresa -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-people"></i> Usuarios de la empresa</h5>
+      <span class="count">{{ usuarios|length }} usuario(s)</span>
+    </div>
+    <table class="aruna-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Rol</th>
+          {% if user_data.empresa_admin %}<th>Acción</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td style="font-weight:600">{{ u.nombre }} {{ u.apellido }}</td>
+          <td style="color:#8b3fe3">{{ u.username }}</td>
+          <td>
+            {% if u.empresa_admin %}
+              <span style="background:#f0e8ff;color:#561d9c;border:1px solid #ddd0f7;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Admin</span>
+            {% elif u.rol == 'editor' %}
+              <span style="background:#e8f0ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Editor</span>
+            {% else %}
+              <span style="background:#f8f5ff;color:#9c7fc0;border:1px solid #ddd0f7;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Viewer</span>
+            {% endif %}
+          </td>
+          {% if user_data.empresa_admin and not u.empresa_admin %}
+          <td>
+            <form method="POST" action="{{ url_for('cambiar_rol', user_id=u.id) }}" style="display:flex;gap:.35rem;align-items:center">
+              <select name="rol" style="padding:.25rem .5rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.78rem;color:#1a0035;background:#fdf9ff;outline:none">
+                <option value="viewer" {% if u.rol=='viewer' %}selected{% endif %}>Viewer</option>
+                <option value="editor" {% if u.rol=='editor' %}selected{% endif %}>Editor</option>
+              </select>
+              <button type="submit" class="btn-act btn-edit" style="padding:.25rem .6rem">
+                <i class="bi bi-check-lg"></i>
+              </button>
+            </form>
+          </td>
+          {% elif user_data.empresa_admin %}
+          <td><span style="font-size:.75rem;color:#c4b4d8">—</span></td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if user_data.empresa_admin %}
+    <div style="padding:1rem 1.25rem;border-top:1px solid #f0eaf7">
+      <div style="font-size:.75rem;font-weight:700;color:#8b3fe3;margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.06em">
+        <i class="bi bi-envelope-plus"></i> Invitar usuario
+      </div>
+      <form method="POST" action="{{ url_for('invitar_usuario') }}" style="display:flex;gap:.5rem">
+        <input type="email" name="email_invitado" placeholder="correo@empresa.com" required
+          style="flex:1;padding:.5rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none">
+        <button type="submit" style="padding:.5rem 1rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap">
+          <i class="bi bi-send"></i> Invitar
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Inventarios -->
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-boxes"></i> Inventarios de la empresa</h5>
+    <a href="{{ url_for('lista_inventarios') }}" style="font-size:.8rem;color:#8b3fe3;font-weight:600;text-decoration:none">Gestionar →</a>
+  </div>
+  {% if inventarios %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding:1.25rem">
+    {% for inv in inventarios %}
+    <a href="{{ url_for('inventario', inv_id=inv.id) }}" style="display:block;padding:1rem;border-radius:12px;border:1.5px solid #ede8f7;text-decoration:none;transition:all .2s">
+      <div style="height:4px;background:{{ inv.color }};border-radius:4px;margin-bottom:.75rem"></div>
+      <div style="font-size:.88rem;font-weight:700;color:#2d0060;margin-bottom:.2rem">{{ inv.nombre }}</div>
+      <div style="font-size:.75rem;color:#9c7fc0">{{ inv.productos|length }} productos</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.88rem">
+    No hay inventarios. <a href="{{ url_for('lista_inventarios') }}" style="color:#8b3fe3;font-weight:600;text-decoration:none">Crear uno →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

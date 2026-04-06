@@ -1,0 +1,250 @@
+{% extends "panel_base.html" %}
+{% block title %}Reportes — aruna{% endblock %}
+
+{% block content %}
+<div class="section-title"><i class="bi bi-bar-chart-line"></i> Reportes</div>
+
+<div class="stat-grid" style="margin-bottom:1.75rem">
+  <div class="stat-card">
+    <div class="stat-icon si-purple">📦</div>
+    <div>
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-label">Total productos</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green">💵</div>
+    <div>
+      <div class="stat-value">${{ "%.2f"|format(valor_total) }}</div>
+      <div class="stat-label">Valor en inventario</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber">⚠️</div>
+    <div>
+      <div class="stat-value">{{ bajo_stock }}</div>
+      <div class="stat-label">Bajo stock (según mínimo)</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-pink">🚫</div>
+    <div>
+      <div class="stat-value">{{ sin_stock }}</div>
+      <div class="stat-label">Sin stock</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+
+  <!-- Productos por categoria -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-pie-chart"></i> Productos por categoría</h5>
+    </div>
+    <table class="aruna-table">
+      <thead>
+        <tr><th>Categoría</th><th>Cantidad</th><th>%</th></tr>
+      </thead>
+      <tbody>
+        {% for cat, cnt in categorias.items() %}
+        <tr>
+          <td style="font-weight:600">{{ cat }}</td>
+          <td>{{ cnt }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <div style="flex:1;background:#f0eaf7;border-radius:20px;height:6px">
+                <div style="width:{{ (cnt/total*100)|int }}%;background:linear-gradient(135deg,#561d9c,#8b3fe3);height:6px;border-radius:20px"></div>
+              </div>
+              <span style="font-size:.75rem;color:#8b3fe3;font-weight:600">{{ (cnt/total*100)|int }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Alertas de stock -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-exclamation-triangle"></i> Alertas de stock</h5>
+      {% if alertas|length > 10 %}
+      <button onclick="document.getElementById('modalAlertas').style.display='flex'"
+        style="font-size:.78rem;color:#8b3fe3;background:#f0e8ff;border:none;padding:.2rem .65rem;border-radius:20px;font-weight:600;cursor:pointer">
+        Ver todos ({{ alertas|length }})
+      </button>
+      {% endif %}
+    </div>
+    {% if alertas %}
+    <table class="aruna-table">
+      <thead>
+        <tr><th>Producto</th><th>Cantidad</th><th>Stock mín.</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {% for p in alertas[:10] %}
+        <tr>
+          <td style="font-weight:600">{{ p.nombre }}</td>
+          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% else %}#92400e{% endif %}">{{ p.cantidad }}</td>
+          <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
+          <td>
+            {% if p.cantidad == 0 %}
+              <span class="badge badge-no">Sin stock</span>
+            {% else %}
+              <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if alertas|length > 10 %}
+    <div style="padding:.75rem 1.25rem;border-top:1px solid #f0eaf7;text-align:center">
+      <button onclick="document.getElementById('modalAlertas').style.display='flex'"
+        style="background:none;border:none;color:#8b3fe3;font-size:.85rem;font-weight:600;cursor:pointer">
+        Ver los {{ alertas|length - 10 }} restantes →
+      </button>
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.88rem">
+      ✅ Todos los productos tienen stock suficiente según su mínimo configurado
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Modal todas las alertas -->
+  <div id="modalAlertas" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:.95rem;font-weight:700;color:#2d0060">Todas las alertas de stock ({{ alertas|length }})</span>
+        <button onclick="document.getElementById('modalAlertas').style.display='none'"
+          style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0;line-height:1">×</button>
+      </div>
+      <div style="overflow-y:auto;flex:1">
+        <table class="aruna-table">
+          <thead>
+            <tr><th>Producto</th><th>Categoría</th><th>Cantidad</th><th>Stock mín.</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            {% for p in alertas %}
+            <tr>
+              <td style="font-weight:600">{{ p.nombre }}</td>
+              <td>{{ p.categoria or "—" }}</td>
+              <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% else %}#92400e{% endif %}">{{ p.cantidad }}</td>
+              <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
+              <td>
+                {% if p.cantidad == 0 %}
+                  <span class="badge badge-no">Sin stock</span>
+                {% else %}
+                  <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reporte por campo personalizado -->
+{% if campos %}
+<div class="panel-card" style="margin-bottom:1.25rem">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-filter-square"></i> Reporte por campo personalizado</h5>
+  </div>
+  <div style="padding:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
+    {% for campo in campos %}
+    <a href="{{ url_for('reporte_por_campo', campo_id=campo.id) }}"
+       style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:#f0e8ff;border:1.5px solid #ddd0f7;border-radius:10px;color:#561d9c;font-size:.85rem;font-weight:600;text-decoration:none;transition:all .15s">
+      <i class="bi bi-tag"></i> {{ campo.nombre }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Tabla completa -->
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-table"></i> Resumen completo de inventario</h5>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span class="count">{{ total }} productos · ${{ "%.2f"|format(valor_total) }}</span>
+      <a href="{{ url_for('exportar_csv') }}" style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;background:#e8f8f0;border:1px solid #a8e6c3;border-radius:8px;color:#1a7a4a;font-size:.78rem;font-weight:600;text-decoration:none">
+        <i class="bi bi-download"></i> CSV
+      </a>
+      <button onclick="document.getElementById('modalEmail').style.display='flex'"
+        style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;background:#f0e8ff;border:1px solid #ddd0f7;border-radius:8px;color:#561d9c;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #ddd0f7">
+        <i class="bi bi-envelope"></i> Enviar
+      </button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="aruna-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th>Cantidad</th>
+          <th>Precio unit.</th>
+          <th>Valor total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos|sort(attribute="cantidad") %}
+        <tr>
+          <td style="font-weight:600">{{ p.nombre }}</td>
+          <td>{{ p.categoria or "—" }}</td>
+          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% elif p.cantidad < 5 %}#92400e{% else %}#1a7a4a{% endif %}">{{ p.cantidad }}</td>
+          <td>${{ "%.2f"|format(p.precio) }}</td>
+          <td style="font-weight:600;color:#2d0060">${{ "%.2f"|format(p.precio * p.cantidad) }}</td>
+          <td>
+            {% if p.cantidad == 0 %}
+              <span class="badge badge-no">Sin stock</span>
+            {% elif p.cantidad <= (p.stock_minimo or 5) %}
+              <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
+            {% else %}
+              <span class="badge badge-ok">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>.si-green{background:#e8f8f0}</style>
+
+<!-- Modal enviar por email -->
+<div id="modalEmail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:.95rem;font-weight:700;color:#2d0060"><i class="bi bi-envelope"></i> Enviar reporte por email</span>
+      <button onclick="document.getElementById('modalEmail').style.display='none'"
+        style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0">×</button>
+    </div>
+    <div style="padding:1.5rem">
+      <form method="POST" action="{{ url_for('enviar_reporte') }}">
+        <div class="fi-group" style="margin-bottom:1rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Destinatario</label>
+          <input type="email" name="email_destino" placeholder="correo@empresa.com" required
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%">
+        </div>
+        <div class="fi-group" style="margin-bottom:1.5rem">
+          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Mensaje (opcional)</label>
+          <textarea name="mensaje" placeholder="Adjunto el reporte de inventario..." rows="3"
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+        </div>
+        <button type="submit" style="width:100%;padding:.75rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-send"></i> Enviar reporte
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

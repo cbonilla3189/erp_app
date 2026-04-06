@@ -1,0 +1,118 @@
+{% extends "panel_base.html" %}
+{% block title %}Campos personalizados — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0">
+      <i class="bi bi-sliders"></i> Campos personalizados
+    </div>
+    <a href="{{ url_for('inventario') }}" class="btn-act btn-edit">
+      <i class="bi bi-arrow-left"></i> Volver al inventario
+    </a>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-plus-circle"></i> Nuevo campo</h5>
+    </div>
+    <div style="padding:1.5rem">
+      <form method="POST">
+        <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:1rem;align-items:end">
+          <div class="fi-group">
+            <label>Nombre del campo <span style="color:#e040a0">*</span></label>
+            <input type="text" name="nombre" placeholder="Ej. Proveedor, N° Factura, Vendedor" required>
+          </div>
+          <div class="fi-group">
+            <label>Tipo</label>
+            <select name="tipo" id="tipoSelect" onchange="toggleOpciones(this.value)">
+              <option value="texto">Texto</option>
+              <option value="numero">Número</option>
+              <option value="fecha">Fecha</option>
+              <option value="dropdown">Lista de opciones</option>
+            </select>
+          </div>
+          <button type="submit" style="padding:.62rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;height:40px;white-space:nowrap">
+            <i class="bi bi-plus-lg"></i> Agregar
+          </button>
+        </div>
+        <div class="fi-group" id="opcionesGroup" style="display:none;margin-top:1rem">
+          <label>Opciones (separadas por coma)</label>
+          <input type="text" name="opciones" placeholder="Ej. Rojo, Verde, Azul">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
+          {% if category == 'success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
+          {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-list-check"></i> Campos configurados</h5>
+      <span class="count">{{ campos|length }} campos</span>
+    </div>
+    {% if campos %}
+    <table class="aruna-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Opciones</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for campo in campos %}
+        <tr>
+          <td style="font-weight:600">{{ campo.nombre }}</td>
+          <td>
+            <span style="background:#f0e8ff;color:#8b3fe3;padding:.18rem .55rem;border-radius:20px;font-size:.75rem;font-weight:600">
+              {{ campo.tipo }}
+            </span>
+          </td>
+          <td style="font-size:.82rem;color:#9c7fc0">{{ campo.opciones or '—' }}</td>
+          <td>
+            <a href="{{ url_for('eliminar_campo', campo_id=campo.id) }}"
+               class="btn-act btn-del"
+               onclick="return confirm('Eliminar campo {{ campo.nombre }}?')">
+              <i class="bi bi-trash"></i> Eliminar
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2.5rem;text-align:center;color:#9c7fc0">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚙️</div>
+      <div style="font-size:.9rem;font-weight:600;color:#2d0060;margin-bottom:.25rem">Sin campos personalizados</div>
+      <div style="font-size:.82rem">Agrega campos para capturar información adicional en tus productos.<br>Por ejemplo: N° Factura, Proveedor, Vendedor, Recibido por.</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.75rem;font-weight:700;color:#3d1a6e}
+.fi-group input,.fi-group select{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;transition:border-color .2s;height:40px}
+.fi-group input:focus,.fi-group select:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.1);background:#fff}
+</style>
+
+<script>
+function toggleOpciones(tipo) {
+  document.getElementById('opcionesGroup').style.display = tipo === 'dropdown' ? 'flex' : 'none';
+}
+</script>
+{% endblock %}

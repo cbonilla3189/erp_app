@@ -1,0 +1,60 @@
+{% extends "panel_base.html" %}
+{% block title %}Inventarios — aruna{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0">
+    <i class="bi bi-boxes"></i> Mis inventarios
+  </div>
+  <a href="{{ url_for('nuevo_inventario') }}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:10px;font-size:.85rem;font-weight:700;text-decoration:none;box-shadow:0 4px 12px rgba(86,29,156,.25)">
+    <i class="bi bi-plus-lg"></i> Nuevo inventario
+  </a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for category, message in messages %}
+    <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
+      {% if category=='success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
+      {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem">
+  {% for inv in inventarios %}
+  <div style="background:#fff;border-radius:16px;border:1.5px solid #ede8f7;box-shadow:0 2px 8px rgba(86,29,156,.06);overflow:hidden;transition:all .2s">
+    <div style="height:6px;background:{{ inv.color }}"></div>
+    <div style="padding:1.5rem">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#2d0060;margin-bottom:.2rem">{{ inv.nombre }}</div>
+          <div style="font-size:.8rem;color:#9c7fc0">{{ inv.descripcion or "Sin descripción" }}</div>
+        </div>
+        <div style="width:40px;height:40px;border-radius:12px;background:{{ inv.color }}22;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">
+          📦
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.25rem">
+        <span style="background:#f0e8ff;color:#8b3fe3;padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:600">
+          {{ inv.productos|length }} productos
+        </span>
+        <span style="font-size:.75rem;color:#c4b4d8">Creado {{ inv.creado_en.strftime('%d/%m/%Y') }}</span>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <a href="{{ url_for('inventario', inv_id=inv.id) }}"
+           style="flex:1;display:flex;align-items:center;justify-content:center;gap:.3rem;padding:.55rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:8px;font-size:.82rem;font-weight:700;text-decoration:none">
+          <i class="bi bi-box-seam"></i> Abrir
+        </a>
+        {% if inv.productos|length == 0 %}
+        <form method="POST" action="{{ url_for('eliminar_inventario', inv_id=inv.id) }}" style="margin:0">
+          <button type="submit" onclick="return confirm('Eliminar inventario?')"
+            style="padding:.55rem .75rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;font-size:.82rem;font-weight:600;cursor:pointer">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

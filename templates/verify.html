@@ -1,14 +1,100 @@
-{% extends "auth_base.html" %}
-{% block title %}Verificar cuenta{% endblock %}
+{% extends "base_register.html" %}
+{% block title %}Verifica tu cuenta — aruna{% endblock %}
 
 {% block content %}
-<h2 class="auth-title">Verificación de cuenta</h2>
-<p class="text-center">
-  Se ha enviado un correo de verificación a tu dirección registrada.<br>
-  Por favor revisa tu bandeja de entrada y sigue el enlace para activar tu cuenta.
-</p>
+<div class="ver-wrap">
+  <div class="ver-card">
 
-<div class="text-center mt-4">
-  <a href="{{ url_for('login') }}" class="btn btn-primary">Volver al inicio de sesión</a>
+    {% if mensaje %}
+      <!-- Pantalla de resultado (éxito o error) -->
+      <div class="ver-icon">{% if "verificada" in mensaje %}✅{% else %}❌{% endif %}</div>
+      <h2>{% if "verificada" in mensaje %}¡Cuenta verificada!{% else %}Verificación fallida{% endif %}</h2>
+      <p>{{ mensaje }}</p>
+      <a href="{{ url_for('login') }}" class="btn-verify" style="text-decoration:none;display:flex">Ir al inicio de sesión</a>
+
+    {% else %}
+      <!-- Pantalla de ingreso de código -->
+      <div class="ver-icon">📧</div>
+      <h2>Revisa tu correo</h2>
+      <p>Enviamos un código de 6 dígitos a <strong>{{ correo }}</strong><br>
+      <small>Expira en 30 minutos</small></p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="/verificar/{{ user_id }}">
+        <div class="code-inputs">
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric" autofocus>
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric">
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric">
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric">
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric">
+          <input class="code-box" type="text" maxlength="1" inputmode="numeric">
+          <input type="hidden" name="codigo" id="codigoHidden">
+        </div>
+        <button type="submit" class="btn-verify">Verificar cuenta</button>
+      </form>
+
+      <div class="ver-footer">
+        <a href="{{ url_for('register') }}">← Volver al registro</a>
+      </div>
+    {% endif %}
+
+  </div>
 </div>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(160deg,#3b1278 0%,#561d9c 45%,#8b3fe3 80%,#ff6fb5 100%);min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif}
+.ver-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem 1rem}
+.ver-card{background:rgba(255,255,255,.97);border-radius:20px;padding:2.5rem 2rem;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(30,0,60,.3)}
+.ver-icon{font-size:3rem;margin-bottom:1rem}
+.ver-card h2{font-size:1.5rem;font-weight:800;color:#2d0060;margin-bottom:.5rem}
+.ver-card p{font-size:.9rem;color:#7c5fa0;margin-bottom:1.75rem;line-height:1.6}
+.ver-card p strong{color:#3d1a6e}
+.ver-card small{font-size:.78rem;opacity:.75}
+.code-inputs{display:flex;gap:.6rem;justify-content:center;margin-bottom:1.75rem}
+.code-box{width:48px;height:56px;text-align:center;font-size:1.4rem;font-weight:700;color:#2d0060;border:2px solid #e2d6f3;border-radius:12px;background:#fdf9ff;outline:none;transition:border-color .2s,box-shadow .2s}
+.code-box:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.15);background:#fff}
+.code-box.filled{border-color:#8b3fe3;background:#f3eeff}
+.btn-verify{width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(86,29,156,.35);transition:transform .15s;justify-content:center;align-items:center;gap:.5rem}
+.btn-verify:hover{transform:translateY(-2px)}
+.alert{padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;text-align:left}
+.alert-danger{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.alert-warning{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.ver-footer{margin-top:1.25rem;font-size:.85rem}
+.ver-footer a{color:#8b3fe3;font-weight:600;text-decoration:none}
+.ver-footer a:hover{text-decoration:underline}
+</style>
+
+<script>
+(function(){
+  const boxes=document.querySelectorAll('.code-box');
+  const hidden=document.getElementById('codigoHidden');
+  if(!boxes.length) return;
+  boxes.forEach((box,i)=>{
+    box.addEventListener('input',()=>{
+      box.value=box.value.replace(/\D/g,'');
+      if(box.value && i<boxes.length-1) boxes[i+1].focus();
+      box.classList.toggle('filled',box.value!=='');
+      hidden.value=Array.from(boxes).map(b=>b.value).join('');
+    });
+    box.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!box.value&&i>0) boxes[i-1].focus();
+    });
+    box.addEventListener('paste',e=>{
+      e.preventDefault();
+      const text=e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
+      text.split('').forEach((ch,j)=>{if(boxes[j]){boxes[j].value=ch;boxes[j].classList.add('filled');}});
+      hidden.value=text;
+      if(boxes[text.length]) boxes[text.length].focus();
+    });
+  });
+})();
+</script>
 {% endblock %}
