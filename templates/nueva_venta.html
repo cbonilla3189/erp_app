@@ -1,0 +1,257 @@
+{% extends "panel_base.html" %}
+{% block title %}Nueva venta — aruna{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-receipt"></i> Nueva venta</div>
+  <a href="{{ url_for('ventas') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+</div>
+
+<form method="POST" id="ventaForm">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+
+  <!-- Cliente -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-person"></i> Cliente</h5></div>
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.85rem">
+      <div class="fi-group">
+        <label>Cliente registrado</label>
+        <select name="cliente_id" id="clienteSelect" onchange="llenarCliente(this)"
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="">— Nuevo cliente / sin registrar —</option>
+          {% for c in clientes %}
+          <option value="{{ c.id }}" data-nombre="{{ c.nombre }} {{ c.apellido or '' }}" data-ruc="{{ c.ruc or '' }}" data-correo="{{ c.correo or '' }}">
+            {{ c.nombre }} {{ c.apellido or '' }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="fi-group">
+        <label>Nombre *</label>
+        <input type="text" name="cliente_nombre" id="clienteNombre" placeholder="Nombre del cliente" required>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:.75rem">
+        <div class="fi-group">
+          <label>RUC</label>
+          <input type="text" name="cliente_ruc" id="clienteRuc" placeholder="8-888-8888">
+        </div>
+        <div class="fi-group">
+          <label>Correo</label>
+          <input type="email" name="cliente_correo" id="clienteCorreo" placeholder="correo@empresa.com">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuracion -->
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-gear"></i> Configuracion</h5></div>
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.85rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="fi-group">
+          <label>Tipo de documento</label>
+          <select name="documento" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+            <option value="recibo">Recibo</option>
+            <option value="factura">Factura</option>
+          </select>
+        </div>
+        <div class="fi-group">
+          <label>Metodo de pago</label>
+          <select name="metodo_pago" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="fi-group">
+          <label>Descuento ($)</label>
+          <input type="number" name="descuento" id="descuento" value="0" min="0" step="0.01" oninput="calcular()">
+        </div>
+        <div class="fi-group" style="justify-content:flex-end;padding-top:1.5rem">
+          <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;font-weight:600;color:#3d1a6e">
+            <input type="checkbox" name="aplicar_itbms" value="1" id="itbmsCheck" onchange="calcular()" style="width:16px;height:16px;accent-color:#561d9c">
+            Aplicar ITBMS (7%)
+          </label>
+        </div>
+      </div>
+      <div class="fi-group">
+        <label>Notas</label>
+        <textarea name="notas" rows="2" placeholder="Notas adicionales..."
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Items -->
+<div class="panel-card" style="margin-bottom:1.25rem">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-list-ul"></i> Productos / Servicios</h5>
+    <div style="display:flex;gap:.5rem">
+      <button type="button" onclick="agregarItem()" class="btn-act btn-edit">
+        <i class="bi bi-plus-lg"></i> Agregar linea
+      </button>
+      <button type="button" onclick="abrirModalProducto()" class="btn-act btn-edit">
+        <i class="bi bi-box-seam"></i> Desde inventario
+      </button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="aruna-table" id="tablaItems">
+      <thead>
+        <tr>
+          <th style="width:40%">Descripcion</th>
+          <th>Cantidad</th>
+          <th>Precio unit.</th>
+          <th>Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody">
+        <tr id="fila_0">
+          <td><input type="text" name="item_nombre[]" placeholder="Descripcion del item" required
+            style="width:100%;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none">
+            <input type="hidden" name="item_producto_id[]" value="">
+          </td>
+          <td><input type="number" name="item_cantidad[]" value="1" min="0.01" step="any" oninput="calcularFila(0)"
+            style="width:80px;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none"></td>
+          <td><input type="number" name="item_precio[]" value="0" min="0" step="0.01" oninput="calcularFila(0)"
+            style="width:100px;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none"></td>
+          <td id="total_0" style="font-weight:700;color:#1a7a4a">$0.00</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Totales -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:1.25rem">
+  <div class="panel-card" style="min-width:320px">
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;justify-content:space-between;font-size:.9rem;color:#9c7fc0">
+        <span>Subtotal</span><span id="resSubtotal">$0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.9rem;color:#9c7fc0">
+        <span>Descuento</span><span id="resDescuento">-$0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.9rem;color:#9c7fc0" id="rowItbms" style="display:none">
+        <span>ITBMS (7%)</span><span id="resItbms">$0.00</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:800;color:#2d0060;border-top:1.5px solid #f0eaf7;padding-top:.5rem;margin-top:.25rem">
+        <span>Total</span><span id="resTotal">$0.00</span>
+      </div>
+    </div>
+    <div style="padding:0 1.25rem 1.25rem">
+      <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+        <i class="bi bi-check-lg"></i> Registrar venta
+      </button>
+    </div>
+  </div>
+</div>
+</form>
+
+<!-- Modal productos inventario -->
+<div id="modalProductos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:.95rem;font-weight:700;color:#2d0060">Seleccionar del inventario</span>
+      <button onclick="document.getElementById('modalProductos').style.display='none'"
+        style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0">×</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:1rem">
+      {% for p in productos %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;border-radius:10px;border:1.5px solid #ede8f7;margin-bottom:.5rem;cursor:pointer"
+        onclick="agregarProductoInventario('{{ p.nombre }}', {{ p.precio }}, {{ p.id }})">
+        <div>
+          <div style="font-weight:600;color:#2d0060">{{ p.nombre }}</div>
+          <div style="font-size:.78rem;color:#9c7fc0">{{ p.categoria or '—' }} · Stock: {{ p.cantidad }}</div>
+        </div>
+        <div style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(p.precio) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input,.fi-group select{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+.fi-group input:focus,.fi-group select:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.1)}
+</style>
+
+<script>
+let filaCount = 1;
+
+function llenarCliente(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('clienteNombre').value = opt.dataset.nombre || '';
+  document.getElementById('clienteRuc').value = opt.dataset.ruc || '';
+  document.getElementById('clienteCorreo').value = opt.dataset.correo || '';
+}
+
+function calcularFila(idx) {
+  const filas = document.querySelectorAll('#itemsBody tr');
+  const fila = document.getElementById('fila_' + idx);
+  if (!fila) return;
+  const cant = parseFloat(fila.querySelector('input[name="item_cantidad[]"]').value) || 0;
+  const precio = parseFloat(fila.querySelector('input[name="item_precio[]"]').value) || 0;
+  const total = cant * precio;
+  fila.querySelector('#total_' + idx).textContent = '$' + total.toFixed(2);
+  calcular();
+}
+
+function calcular() {
+  let subtotal = 0;
+  document.querySelectorAll('#itemsBody tr').forEach((fila, i) => {
+    const cant = parseFloat(fila.querySelector('input[name="item_cantidad[]"]')?.value) || 0;
+    const precio = parseFloat(fila.querySelector('input[name="item_precio[]"]')?.value) || 0;
+    subtotal += cant * precio;
+  });
+  const descuento = parseFloat(document.getElementById('descuento').value) || 0;
+  const aplicaItbms = document.getElementById('itbmsCheck').checked;
+  const base = subtotal - descuento;
+  const itbms = aplicaItbms ? base * 0.07 : 0;
+  const total = base + itbms;
+  document.getElementById('resSubtotal').textContent = '$' + subtotal.toFixed(2);
+  document.getElementById('resDescuento').textContent = '-$' + descuento.toFixed(2);
+  document.getElementById('resItbms').textContent = '$' + itbms.toFixed(2);
+  document.getElementById('rowItbms').style.display = aplicaItbms ? 'flex' : 'none';
+  document.getElementById('resTotal').textContent = '$' + total.toFixed(2);
+}
+
+function agregarItem(nombre='', precio=0, prodId='') {
+  const idx = filaCount++;
+  const tbody = document.getElementById('itemsBody');
+  const tr = document.createElement('tr');
+  tr.id = 'fila_' + idx;
+  tr.innerHTML = `
+    <td><input type="text" name="item_nombre[]" value="${nombre}" placeholder="Descripcion" required
+      style="width:100%;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none">
+      <input type="hidden" name="item_producto_id[]" value="${prodId}">
+    </td>
+    <td><input type="number" name="item_cantidad[]" value="1" min="0.01" step="any" oninput="calcularFila(${idx})"
+      style="width:80px;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none"></td>
+    <td><input type="number" name="item_precio[]" value="${precio}" min="0" step="0.01" oninput="calcularFila(${idx})"
+      style="width:100px;padding:.45rem .75rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none"></td>
+    <td id="total_${idx}" style="font-weight:700;color:#1a7a4a">$${(precio).toFixed(2)}</td>
+    <td><button type="button" onclick="this.closest('tr').remove();calcular()"
+      style="background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#b91c1c;padding:.25rem .5rem;cursor:pointer;font-size:.8rem">
+      <i class="bi bi-trash"></i></button></td>`;
+  tbody.appendChild(tr);
+  calcular();
+}
+
+function abrirModalProducto() {
+  document.getElementById('modalProductos').style.display = 'flex';
+}
+
+function agregarProductoInventario(nombre, precio, id) {
+  agregarItem(nombre, precio, id);
+  document.getElementById('modalProductos').style.display = 'none';
+}
+</script>
+{% endblock %}

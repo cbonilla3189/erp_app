@@ -1,0 +1,75 @@
+{% extends "panel_base.html" %}
+{% block title %}Nueva suscripcion — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-arrow-repeat"></i> Nueva suscripcion</div>
+    <a href="{{ url_for('ventas') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-arrow-repeat"></i> Datos de la suscripcion</h5></div>
+    <div style="padding:1.75rem">
+      <form method="POST">
+        <div class="fi-group" style="margin-bottom:1rem">
+          <label>Cliente registrado</label>
+          <select name="cliente_id" onchange="setNombreCliente(this)"
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%">
+            <option value="">— Nuevo cliente —</option>
+            {% for c in clientes %}
+            <option value="{{ c.id }}" data-nombre="{{ c.nombre }} {{ c.apellido or '' }}">{{ c.nombre }} {{ c.apellido or '' }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fi-group" style="margin-bottom:1rem">
+          <label>Nombre del cliente *</label>
+          <input type="text" name="cliente_nombre" id="nombreCliente" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group"><label>Plan / Nombre *</label><input type="text" name="plan" placeholder="Ej. Membresia Gold" required></div>
+          <div class="fi-group"><label>Monto ($) *</label><input type="number" name="monto" min="0" step="0.01" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group">
+            <label>Frecuencia</label>
+            <select name="frecuencia" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%">
+              <option value="semanal">Semanal</option>
+              <option value="mensual" selected>Mensual</option>
+              <option value="trimestral">Trimestral</option>
+              <option value="anual">Anual</option>
+            </select>
+          </div>
+          <div class="fi-group"><label>Fecha inicio *</label><input type="date" name="fecha_inicio" required></div>
+          <div class="fi-group">
+            <label>Metodo de pago</label>
+            <select name="metodo_pago" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%">
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+        </div>
+        <div class="fi-group" style="margin-bottom:1.75rem">
+          <label>Descripcion</label>
+          <textarea name="descripcion" rows="2"
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+        </div>
+        <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Registrar suscripcion
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+<script>
+function setNombreCliente(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (opt.value) document.getElementById('nombreCliente').value = opt.dataset.nombre;
+}
+</script>
+{% endblock %}

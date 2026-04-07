@@ -1,5 +1,34 @@
 {% extends "panel_base.html" %}
-{% block title %}Mi Empresa — aruna{% endblock %}
+{% block title %}Mi Empresa — aruna<!-- Configuracion de sesion -->
+{% if user_data.empresa_admin %}
+<div class="panel-card" style="margin-top:1.25rem">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-shield-lock"></i> Seguridad de sesion</h5>
+  </div>
+  <div style="padding:1.5rem">
+    <form method="POST" action="{{ url_for('configurar_timeout') }}" style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Tiempo de inactividad antes de cerrar sesion</label>
+        <select name="session_timeout" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;min-width:220px">
+          <option value="15" {% if user_data.session_timeout == 15 %}selected{% endif %}>15 minutos</option>
+          <option value="30" {% if user_data.session_timeout == 30 %}selected{% endif %}>30 minutos</option>
+          <option value="60" {% if user_data.session_timeout == 60 %}selected{% endif %}>1 hora</option>
+          <option value="120" {% if user_data.session_timeout == 120 or not user_data.session_timeout %}selected{% endif %}>2 horas (recomendado)</option>
+          <option value="240" {% if user_data.session_timeout == 240 %}selected{% endif %}>4 horas</option>
+          <option value="480" {% if user_data.session_timeout == 480 %}selected{% endif %}>8 horas</option>
+        </select>
+      </div>
+      <button type="submit" style="padding:.62rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;height:40px">
+        <i class="bi bi-check-lg"></i> Guardar
+      </button>
+    </form>
+    <div style="font-size:.78rem;color:#9c7fc0;margin-top:.75rem">
+      <i class="bi bi-info-circle"></i> Esta configuracion aplica a todos los usuarios de la empresa. Minimo 15 minutos, maximo 8 horas.
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="section-title"><i class="bi bi-building"></i> Mi Empresa</div>
@@ -87,15 +116,26 @@
           </td>
           {% if user_data.empresa_admin and not u.empresa_admin %}
           <td>
-            <form method="POST" action="{{ url_for('cambiar_rol', user_id=u.id) }}" style="display:flex;gap:.35rem;align-items:center">
-              <select name="rol" style="padding:.25rem .5rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.78rem;color:#1a0035;background:#fdf9ff;outline:none">
-                <option value="viewer" {% if u.rol=='viewer' %}selected{% endif %}>Viewer</option>
-                <option value="editor" {% if u.rol=='editor' %}selected{% endif %}>Editor</option>
-              </select>
-              <button type="submit" class="btn-act btn-edit" style="padding:.25rem .6rem">
-                <i class="bi bi-check-lg"></i>
-              </button>
-            </form>
+            <div style="display:flex;gap:.35rem;align-items:center;flex-wrap:wrap">
+              <form method="POST" action="{{ url_for('cambiar_rol', user_id=u.id) }}" style="display:flex;gap:.35rem;align-items:center">
+                <select name="rol" style="padding:.25rem .5rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.78rem;color:#1a0035;background:#fdf9ff;outline:none">
+                  <option value="viewer" {% if u.rol=='viewer' %}selected{% endif %}>Viewer</option>
+                  <option value="editor" {% if u.rol=='editor' %}selected{% endif %}>Editor</option>
+                </select>
+                <button type="submit" class="btn-act btn-edit" style="padding:.25rem .6rem">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              <a href="{{ url_for('editar_usuario_empresa', user_id=u.id) }}" class="btn-act btn-edit" style="padding:.25rem .6rem">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="POST" action="{{ url_for('eliminar_usuario_empresa', user_id=u.id) }}" style="margin:0"
+                onsubmit="return confirm('Eliminar a {{ u.nombre }}?')">
+                <button type="submit" class="btn-act btn-del" style="padding:.25rem .6rem">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
           </td>
           {% elif user_data.empresa_admin %}
           <td><span style="font-size:.75rem;color:#c4b4d8">—</span></td>
@@ -144,4 +184,33 @@
   </div>
   {% endif %}
 </div>
+
+{% if user_data.empresa_admin %}
+<div class="panel-card" style="margin-top:1.25rem">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-shield-lock"></i> Seguridad de sesion</h5>
+  </div>
+  <div style="padding:1.5rem">
+    <form method="POST" action="{{ url_for('configurar_timeout') }}" style="display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Tiempo de inactividad antes de cerrar sesion</label>
+        <select name="session_timeout" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;min-width:220px">
+          <option value="15" {% if user_data.session_timeout == 15 %}selected{% endif %}>15 minutos</option>
+          <option value="30" {% if user_data.session_timeout == 30 %}selected{% endif %}>30 minutos</option>
+          <option value="60" {% if user_data.session_timeout == 60 %}selected{% endif %}>1 hora</option>
+          <option value="120" {% if user_data.session_timeout == 120 or not user_data.session_timeout %}selected{% endif %}>2 horas (recomendado)</option>
+          <option value="240" {% if user_data.session_timeout == 240 %}selected{% endif %}>4 horas</option>
+          <option value="480" {% if user_data.session_timeout == 480 %}selected{% endif %}>8 horas</option>
+        </select>
+      </div>
+      <button type="submit" style="padding:.62rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;height:40px">
+        <i class="bi bi-check-lg"></i> Guardar
+      </button>
+    </form>
+    <div style="font-size:.78rem;color:#9c7fc0;margin-top:.75rem">
+      <i class="bi bi-info-circle"></i> Aplica a todos los usuarios de la empresa. Minimo 15 min, maximo 8 horas.
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

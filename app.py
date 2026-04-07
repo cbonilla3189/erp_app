@@ -51,7 +51,8 @@ class Usuario(db.Model):
     password    = db.Column(db.String(256), nullable=False)
     verificado    = db.Column(db.Integer, default=0)
     rol           = db.Column(db.String(20), default='viewer')
-    empresa_admin = db.Column(db.Boolean, default=False)
+    empresa_admin    = db.Column(db.Boolean, default=False)
+    session_timeout  = db.Column(db.Integer, default=120)
     productos   = db.relationship("Producto", backref="usuario", lazy=True)
     tokens      = db.relationship("TokenVerificacion", backref="usuario", lazy=True)
 
@@ -107,6 +108,126 @@ class Categoria(db.Model):
     productos     = db.relationship("Producto", backref="categoria_obj", lazy=True)
 
 
+
+
+class Plan(db.Model):
+    __tablename__ = "planes"
+    id          = db.Column(db.Integer, primary_key=True)
+    empresa     = db.Column(db.String(200), nullable=False)
+    nombre      = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text)
+    costo       = db.Column(db.Numeric(12,2), nullable=False)
+    frecuencia  = db.Column(db.String(20), default="mensual")
+    color       = db.Column(db.String(7), default="#561d9c")
+    activo      = db.Column(db.Boolean, default=True)
+    creado_en   = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    incluye     = db.relationship("PlanIncluye", backref="plan", lazy=True, cascade="all, delete-orphan")
+    horarios    = db.relationship("PlanHorario", backref="plan", lazy=True, cascade="all, delete-orphan")
+
+
+class PlanIncluye(db.Model):
+    __tablename__ = "plan_incluye"
+    id          = db.Column(db.Integer, primary_key=True)
+    plan_id     = db.Column(db.Integer, db.ForeignKey("planes.id"))
+    descripcion = db.Column(db.String(200), nullable=False)
+
+
+class PlanHorario(db.Model):
+    __tablename__ = "plan_horarios"
+    id          = db.Column(db.Integer, primary_key=True)
+    plan_id     = db.Column(db.Integer, db.ForeignKey("planes.id"))
+    dia         = db.Column(db.String(20), nullable=False)
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fin    = db.Column(db.Time, nullable=False)
+    actividad   = db.Column(db.String(100), nullable=False)
+    instructor  = db.Column(db.String(100))
+
+class Cliente(db.Model):
+    __tablename__ = "clientes"
+    id         = db.Column(db.Integer, primary_key=True)
+    empresa    = db.Column(db.String(200))
+    nombre     = db.Column(db.String(100), nullable=False)
+    apellido   = db.Column(db.String(100))
+    ruc        = db.Column(db.String(50))
+    dv         = db.Column(db.String(10))
+    correo     = db.Column(db.String(150))
+    telefono   = db.Column(db.String(30))
+    direccion  = db.Column(db.Text)
+    creado_en  = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    ventas     = db.relationship("Venta", backref="cliente_rel", lazy=True)
+    suscripciones = db.relationship("Suscripcion", backref="cliente_rel", lazy=True)
+    servicios  = db.relationship("ServicioFijo", backref="cliente_rel", lazy=True)
+
+
+class Venta(db.Model):
+    __tablename__ = "ventas"
+    id              = db.Column(db.Integer, primary_key=True)
+    empresa         = db.Column(db.String(200))
+    tipo            = db.Column(db.String(20), nullable=False)
+    numero_factura  = db.Column(db.String(50))
+    cliente_id      = db.Column(db.Integer, db.ForeignKey("clientes.id"))
+    cliente_nombre  = db.Column(db.String(200))
+    cliente_ruc     = db.Column(db.String(50))
+    cliente_correo  = db.Column(db.String(150))
+    subtotal        = db.Column(db.Numeric(12,2), default=0)
+    itbms           = db.Column(db.Numeric(12,2), default=0)
+    descuento       = db.Column(db.Numeric(12,2), default=0)
+    total           = db.Column(db.Numeric(12,2), default=0)
+    metodo_pago     = db.Column(db.String(30))
+    documento       = db.Column(db.String(20), default="recibo")
+    estado          = db.Column(db.String(20), default="pagado")
+    notas           = db.Column(db.Text)
+    creado_por      = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    creado_en       = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    items           = db.relationship("VentaItem", backref="venta", lazy=True, cascade="all, delete-orphan")
+
+
+class VentaItem(db.Model):
+    __tablename__ = "venta_items"
+    id              = db.Column(db.Integer, primary_key=True)
+    venta_id        = db.Column(db.Integer, db.ForeignKey("ventas.id"))
+    producto_id     = db.Column(db.Integer, db.ForeignKey("productos.id"))
+    descripcion     = db.Column(db.String(200))
+    cantidad        = db.Column(db.Numeric(10,2), default=1)
+    precio_unitario = db.Column(db.Numeric(12,2), default=0)
+    total           = db.Column(db.Numeric(12,2), default=0)
+
+
+class Suscripcion(db.Model):
+    __tablename__ = "suscripciones"
+    id             = db.Column(db.Integer, primary_key=True)
+    empresa        = db.Column(db.String(200))
+    cliente_id     = db.Column(db.Integer, db.ForeignKey("clientes.id"))
+    cliente_nombre = db.Column(db.String(200))
+    plan           = db.Column(db.String(100))
+    descripcion    = db.Column(db.Text)
+    monto          = db.Column(db.Numeric(12,2))
+    frecuencia     = db.Column(db.String(20), default="mensual")
+    fecha_inicio   = db.Column(db.Date)
+    proximo_cobro  = db.Column(db.Date)
+    estado         = db.Column(db.String(20), default="activa")
+    metodo_pago    = db.Column(db.String(30))
+    plan_id        = db.Column(db.Integer, db.ForeignKey("planes.id"))
+    creado_por     = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    creado_en      = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
+class ServicioFijo(db.Model):
+    __tablename__ = "servicios_fijos"
+    id             = db.Column(db.Integer, primary_key=True)
+    empresa        = db.Column(db.String(200))
+    cliente_id     = db.Column(db.Integer, db.ForeignKey("clientes.id"))
+    cliente_nombre = db.Column(db.String(200))
+    descripcion    = db.Column(db.String(200))
+    monto          = db.Column(db.Numeric(12,2))
+    periodo        = db.Column(db.String(20))
+    fecha_inicio   = db.Column(db.Date)
+    fecha_fin      = db.Column(db.Date)
+    estado         = db.Column(db.String(20), default="activo")
+    metodo_pago    = db.Column(db.String(30))
+    creado_por     = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    creado_en      = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
 class CampoPersonalizado(db.Model):
     __tablename__ = "campos_personalizados"
     id         = db.Column(db.Integer, primary_key=True)
@@ -148,6 +269,24 @@ def init_db():
 # -----------------------------
 # Context processor
 # -----------------------------
+@app.before_request
+def check_session_timeout():
+    if "user_id" in session:
+        try:
+            now = datetime.datetime.utcnow()
+            last_active = session.get("last_active")
+            if last_active:
+                last_active_dt = datetime.datetime.fromisoformat(last_active)
+                user = Usuario.query.get(session["user_id"])
+                timeout_minutes = (user.session_timeout or 120) if user else 120
+                if (now - last_active_dt).total_seconds() > timeout_minutes * 60:
+                    session.clear()
+                    return redirect(url_for("login"))
+            session["last_active"] = now.isoformat()
+        except Exception:
+            session["last_active"] = datetime.datetime.utcnow().isoformat()
+
+
 @app.context_processor
 def inject_user():
     username = session.get("username") or ""
@@ -558,6 +697,7 @@ def eliminar_campo(campo_id):
 def reportes():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    import datetime as dt
     user = Usuario.query.get(session["user_id"])
     empresa = user.empresa or ""
     inventarios_emp = Inventario.query.filter_by(empresa=empresa).all()
@@ -570,21 +710,84 @@ def reportes():
     alertas = [p for p in productos if p.cantidad <= (p.stock_minimo or 5)]
     cats = {}
     for p in productos:
-        cat = p.categoria or "Sin categoría"
+        cat = p.categoria or "Sin categoria"
         cats[cat] = cats.get(cat, 0) + 1
-    user = Usuario.query.get(session["user_id"])
-    empresa = user.empresa or ""
     campos = CampoPersonalizado.query.filter_by(empresa=empresa).all()
+    prods_mas_comprados = sorted(productos, key=lambda p: p.cantidad, reverse=True)[:5]
+    prods_menos_comprados = sorted([p for p in productos if p.cantidad > 0], key=lambda p: p.cantidad)[:5]
+    todas_ventas = Venta.query.filter_by(empresa=empresa).order_by(Venta.creado_en.desc()).all()
+    venta_ids = [v.id for v in todas_ventas]
+    items_vendidos = {}
+    if venta_ids:
+        items = VentaItem.query.filter(VentaItem.venta_id.in_(venta_ids)).all()
+        for item in items:
+            key = item.descripcion
+            if key not in items_vendidos:
+                items_vendidos[key] = {"cantidad": 0, "total": 0}
+            items_vendidos[key]["cantidad"] += float(item.cantidad)
+            items_vendidos[key]["total"] += float(item.total)
+    prods_mas_vendidos = sorted(items_vendidos.items(), key=lambda x: x[1]["cantidad"], reverse=True)[:5]
+    prods_menos_vendidos = sorted(items_vendidos.items(), key=lambda x: x[1]["cantidad"])[:5]
+    today = dt.date.today()
+    inicio_mes = today.replace(day=1)
+    inicio_semana = today - dt.timedelta(days=today.weekday())
+    ventas_hoy = [v for v in todas_ventas if v.creado_en.date() == today]
+    ventas_semana = [v for v in todas_ventas if v.creado_en.date() >= inicio_semana]
+    ventas_mes = [v for v in todas_ventas if v.creado_en.date() >= inicio_mes]
+    total_hoy = sum(float(v.total) for v in ventas_hoy)
+    total_semana = sum(float(v.total) for v in ventas_semana)
+    total_mes = sum(float(v.total) for v in ventas_mes)
+    total_general = sum(float(v.total) for v in todas_ventas)
+    metodos = {}
+    for v in todas_ventas:
+        m = v.metodo_pago or "otro"
+        metodos[m] = metodos.get(m, 0) + float(v.total)
+    por_cliente = {}
+    for v in todas_ventas:
+        cl = v.cliente_nombre or "General"
+        if cl not in por_cliente:
+            por_cliente[cl] = {"total": 0, "count": 0}
+        por_cliente[cl]["total"] += float(v.total)
+        por_cliente[cl]["count"] += 1
+    top_clientes = sorted(por_cliente.items(), key=lambda x: x[1]["total"], reverse=True)[:5]
+    suscripciones = Suscripcion.query.filter_by(empresa=empresa).all()
+    sus_activas = [s for s in suscripciones if s.estado == "activa"]
+    sus_vencen_7 = [s for s in sus_activas if s.proximo_cobro and (s.proximo_cobro - today).days <= 7]
+    sus_vencen_15 = [s for s in sus_activas if s.proximo_cobro and (s.proximo_cobro - today).days <= 15]
+    sus_vencen_30 = [s for s in sus_activas if s.proximo_cobro and (s.proximo_cobro - today).days <= 30]
+    ingreso_sus = sum(float(s.monto) for s in sus_activas)
+    por_plan = {}
+    for s in suscripciones:
+        p = s.plan or "Sin plan"
+        if p not in por_plan:
+            por_plan[p] = {"count": 0, "ingreso": 0}
+        por_plan[p]["count"] += 1
+        por_plan[p]["ingreso"] += float(s.monto)
+    planes_mas_vendidos = sorted(por_plan.items(), key=lambda x: x[1]["count"], reverse=True)[:5]
+    planes_menos_vendidos = sorted(por_plan.items(), key=lambda x: x[1]["count"])[:5]
+    servicios = ServicioFijo.query.filter_by(empresa=empresa).all()
+    srv_activos = [s for s in servicios if s.estado == "activo"]
+    srv_vencidos = [s for s in servicios if s.estado != "activo" or (s.fecha_fin and s.fecha_fin < today)]
+    ingreso_srv = sum(float(s.monto) for s in srv_activos)
     return render_template("reportes.html",
-        total=total,
-        valor_total=valor_total,
-        sin_stock=sin_stock,
-        bajo_stock=bajo_stock,
-        categorias=cats,
-        productos=productos,
-        alertas=alertas,
-        campos=campos)
-
+        total=total, valor_total=valor_total,
+        sin_stock=sin_stock, bajo_stock=bajo_stock,
+        alertas=alertas, categorias=cats, productos=productos, campos=campos,
+        prods_mas_comprados=prods_mas_comprados,
+        prods_menos_comprados=prods_menos_comprados,
+        prods_mas_vendidos=prods_mas_vendidos,
+        prods_menos_vendidos=prods_menos_vendidos,
+        ventas_hoy=ventas_hoy, ventas_semana=ventas_semana, ventas_mes=ventas_mes,
+        total_hoy=total_hoy, total_semana=total_semana,
+        total_mes=total_mes, total_general=total_general,
+        metodos=metodos, top_clientes=top_clientes,
+        sus_activas=sus_activas, sus_vencen_7=sus_vencen_7,
+        sus_vencen_15=sus_vencen_15, sus_vencen_30=sus_vencen_30,
+        ingreso_sus=ingreso_sus,
+        planes_mas_vendidos=planes_mas_vendidos,
+        planes_menos_vendidos=planes_menos_vendidos,
+        srv_activos=srv_activos, srv_vencidos=srv_vencidos,
+        ingreso_srv=ingreso_srv, today=today)
 
 @app.route("/reportes/campo/<int:campo_id>")
 def reporte_por_campo(campo_id):
@@ -1031,6 +1234,462 @@ def productos_categoria(inv_id, cat_id):
     return render_template("productos_categoria.html",
         inv=inv, cat=cat, productos=productos,
         campos=campos, valores=valores)
+
+
+
+# -----------------------------
+# Modulo de Ventas
+# -----------------------------
+@app.route("/ventas")
+def ventas():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    ventas = Venta.query.filter_by(empresa=empresa).order_by(Venta.creado_en.desc()).all()
+    suscripciones = Suscripcion.query.filter_by(empresa=empresa).order_by(Suscripcion.creado_en.desc()).all()
+    servicios = ServicioFijo.query.filter_by(empresa=empresa).order_by(ServicioFijo.creado_en.desc()).all()
+    clientes = Cliente.query.filter_by(empresa=empresa).all()
+    total_ventas = sum(float(v.total) for v in ventas)
+    total_suscripciones = sum(float(s.monto) for s in suscripciones if s.estado == "activa")
+    total_servicios = sum(float(s.monto) for s in servicios if s.estado == "activo")
+    import datetime as dt
+    return render_template("ventas.html",
+        ventas=ventas, suscripciones=suscripciones, servicios=servicios,
+        clientes=clientes, total_ventas=total_ventas,
+        total_suscripciones=total_suscripciones, total_servicios=total_servicios,
+        today=dt.date.today())
+
+
+@app.route("/ventas/clientes")
+def clientes():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    clientes = Cliente.query.filter_by(empresa=empresa).order_by(Cliente.creado_en.desc()).all()
+    return render_template("clientes.html", clientes=clientes)
+
+
+@app.route("/ventas/clientes/nuevo", methods=["GET","POST"])
+def nuevo_cliente():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    if request.method == "POST":
+        tipo_cliente = request.form.get("tipo_cliente","natural")
+        if tipo_cliente == "legal":
+            nombre   = request.form.get("nombre","").strip().title()
+            apellido = request.form.get("apellido","").strip().title()
+            ruc      = request.form.get("ruc","").strip()
+            dv       = request.form.get("dv","").strip()
+            correo   = request.form.get("correo_empresa","").strip() or request.form.get("correo","").strip()
+            telefono = request.form.get("telefono_empresa","").strip() or request.form.get("telefono","").strip()
+            razon_social = request.form.get("razon_social","").strip().title()
+            direccion = razon_social
+        else:
+            nombre   = request.form.get("nombre","").strip().title()
+            apellido = request.form.get("apellido","").strip().title()
+            ruc      = request.form.get("cedula","").strip()
+            dv       = ""
+            correo   = request.form.get("correo","").strip()
+            telefono = request.form.get("telefono","").strip()
+            direccion = request.form.get("direccion","").strip()
+
+        cl = Cliente(
+            empresa=user.empresa or "",
+            nombre=nombre, apellido=apellido,
+            ruc=ruc, dv=dv, correo=correo,
+            telefono=telefono, direccion=direccion
+        )
+        db.session.add(cl)
+        db.session.commit()
+        flash(f"Cliente {cl.nombre} registrado.", "success")
+        return redirect(url_for("clientes"))
+    return render_template("nuevo_cliente.html")
+
+
+@app.route("/ventas/nueva", methods=["GET","POST"])
+def nueva_venta():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    clientes = Cliente.query.filter_by(empresa=empresa).all()
+    inventarios = Inventario.query.filter_by(empresa=empresa).all()
+    inv_ids = [i.id for i in inventarios]
+    productos = Producto.query.filter(Producto.inventario_id.in_(inv_ids)).all() if inv_ids else []
+
+    if request.method == "POST":
+        import datetime as dt
+        cliente_id   = request.form.get("cliente_id") or None
+        cliente_nombre = request.form.get("cliente_nombre","").strip()
+        cliente_ruc  = request.form.get("cliente_ruc","").strip()
+        cliente_correo = request.form.get("cliente_correo","").strip()
+        documento    = request.form.get("documento","recibo")
+        metodo_pago  = request.form.get("metodo_pago","efectivo")
+        descuento    = float(request.form.get("descuento",0) or 0)
+        aplicar_itbms = request.form.get("aplicar_itbms") == "1"
+        notas        = request.form.get("notas","").strip()
+
+        if cliente_id:
+            cl = Cliente.query.get(int(cliente_id))
+            if cl:
+                cliente_nombre = f"{cl.nombre} {cl.apellido or ''}".strip()
+                cliente_ruc    = cl.ruc or ""
+                cliente_correo = cl.correo or ""
+
+        # Generar numero de factura
+        ultimo = Venta.query.filter_by(empresa=empresa).order_by(Venta.id.desc()).first()
+        num = (ultimo.id + 1) if ultimo else 1
+        numero_factura = f"{'FAC' if documento == 'factura' else 'REC'}-{str(num).zfill(5)}"
+
+        # Procesar items
+        nombres = request.form.getlist("item_nombre[]")
+        cantidades = request.form.getlist("item_cantidad[]")
+        precios = request.form.getlist("item_precio[]")
+        producto_ids = request.form.getlist("item_producto_id[]")
+
+        subtotal = 0
+        items_data = []
+        for i in range(len(nombres)):
+            if nombres[i].strip():
+                cant = float(cantidades[i] or 1)
+                precio = float(precios[i] or 0)
+                total_item = cant * precio
+                subtotal += total_item
+                items_data.append({
+                    "descripcion": nombres[i].strip(),
+                    "cantidad": cant,
+                    "precio_unitario": precio,
+                    "total": total_item,
+                    "producto_id": int(producto_ids[i]) if producto_ids[i] else None
+                })
+
+        subtotal -= descuento
+        itbms = round(subtotal * 0.07, 2) if aplicar_itbms else 0
+        total = subtotal + itbms
+
+        venta = Venta(
+            empresa=empresa, tipo="venta",
+            numero_factura=numero_factura,
+            cliente_id=int(cliente_id) if cliente_id else None,
+            cliente_nombre=cliente_nombre,
+            cliente_ruc=cliente_ruc,
+            cliente_correo=cliente_correo,
+            subtotal=subtotal, itbms=itbms,
+            descuento=descuento, total=total,
+            metodo_pago=metodo_pago, documento=documento,
+            notas=notas, creado_por=user.id
+        )
+        db.session.add(venta)
+        db.session.flush()
+
+        for item in items_data:
+            vi = VentaItem(
+                venta_id=venta.id,
+                producto_id=item["producto_id"],
+                descripcion=item["descripcion"],
+                cantidad=item["cantidad"],
+                precio_unitario=item["precio_unitario"],
+                total=item["total"]
+            )
+            db.session.add(vi)
+            if item["producto_id"]:
+                prod = Producto.query.get(item["producto_id"])
+                if prod:
+                    prod.cantidad = max(0, prod.cantidad - int(item["cantidad"]))
+
+        db.session.commit()
+        flash(f"Venta {numero_factura} registrada.", "success")
+        return redirect(url_for("ver_venta", venta_id=venta.id))
+
+    return render_template("nueva_venta.html", clientes=clientes, productos=productos)
+
+
+@app.route("/ventas/<int:venta_id>")
+def ver_venta(venta_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    venta = Venta.query.get(venta_id)
+    user = Usuario.query.get(session["user_id"])
+    return render_template("ver_venta.html", venta=venta, empresa=user)
+
+
+@app.route("/ventas/suscripcion/nueva", methods=["GET","POST"])
+def nueva_suscripcion():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    clientes = Cliente.query.filter_by(empresa=empresa).all()
+    if request.method == "POST":
+        import datetime as dt
+        cliente_id = request.form.get("cliente_id") or None
+        cliente_nombre = request.form.get("cliente_nombre","").strip()
+        if cliente_id:
+            cl = Cliente.query.get(int(cliente_id))
+            if cl: cliente_nombre = f"{cl.nombre} {cl.apellido or ''}".strip()
+        fecha_inicio = dt.date.fromisoformat(request.form.get("fecha_inicio"))
+        frecuencia = request.form.get("frecuencia","mensual")
+        from dateutil.relativedelta import relativedelta
+        freq_map = {"semanal":relativedelta(weeks=1),"mensual":relativedelta(months=1),"trimestral":relativedelta(months=3),"anual":relativedelta(years=1)}
+        proximo = fecha_inicio + freq_map.get(frecuencia, relativedelta(months=1))
+        s = Suscripcion(
+            empresa=empresa,
+            cliente_id=int(cliente_id) if cliente_id else None,
+            cliente_nombre=cliente_nombre,
+            plan=request.form.get("plan","").strip(),
+            descripcion=request.form.get("descripcion","").strip(),
+            monto=float(request.form.get("monto",0)),
+            frecuencia=frecuencia,
+            fecha_inicio=fecha_inicio,
+            proximo_cobro=proximo,
+            metodo_pago=request.form.get("metodo_pago","efectivo"),
+            creado_por=user.id
+        )
+        db.session.add(s)
+        db.session.commit()
+        flash("Suscripcion registrada.", "success")
+        return redirect(url_for("ventas"))
+    return render_template("nueva_suscripcion.html", clientes=clientes)
+
+
+@app.route("/ventas/servicio/nuevo", methods=["GET","POST"])
+def nuevo_servicio():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    clientes = Cliente.query.filter_by(empresa=empresa).all()
+    if request.method == "POST":
+        import datetime as dt
+        cliente_id = request.form.get("cliente_id") or None
+        cliente_nombre = request.form.get("cliente_nombre","").strip()
+        if cliente_id:
+            cl = Cliente.query.get(int(cliente_id))
+            if cl: cliente_nombre = f"{cl.nombre} {cl.apellido or ''}".strip()
+        s = ServicioFijo(
+            empresa=empresa,
+            cliente_id=int(cliente_id) if cliente_id else None,
+            cliente_nombre=cliente_nombre,
+            descripcion=request.form.get("descripcion","").strip(),
+            monto=float(request.form.get("monto",0)),
+            periodo=request.form.get("periodo","mensual"),
+            fecha_inicio=dt.date.fromisoformat(request.form.get("fecha_inicio")),
+            fecha_fin=dt.date.fromisoformat(request.form.get("fecha_fin")) if request.form.get("fecha_fin") else None,
+            metodo_pago=request.form.get("metodo_pago","efectivo"),
+            creado_por=user.id
+        )
+        db.session.add(s)
+        db.session.commit()
+        flash("Servicio registrado.", "success")
+        return redirect(url_for("ventas"))
+    return render_template("nuevo_servicio.html", clientes=clientes)
+
+
+# -----------------------------
+# Planes / Catalogo
+# -----------------------------
+@app.route("/ventas/planes")
+def planes():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    planes = Plan.query.filter_by(empresa=empresa).order_by(Plan.creado_en.desc()).all()
+    return render_template("planes.html", planes=planes)
+
+
+@app.route("/ventas/planes/nuevo", methods=["GET","POST"])
+def nuevo_plan():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    if request.method == "POST":
+        import datetime as dt
+        nombre      = request.form.get("nombre","").strip().title()
+        descripcion = request.form.get("descripcion","").strip()
+        costo       = float(request.form.get("costo", 0))
+        frecuencia  = request.form.get("frecuencia","mensual")
+        color       = request.form.get("color","#561d9c")
+
+        plan = Plan(empresa=empresa, nombre=nombre, descripcion=descripcion,
+                    costo=costo, frecuencia=frecuencia, color=color)
+        db.session.add(plan)
+        db.session.flush()
+
+        # Items que incluye
+        incluye_items = request.form.getlist("incluye[]")
+        for item in incluye_items:
+            if item.strip():
+                db.session.add(PlanIncluye(plan_id=plan.id, descripcion=item.strip()))
+
+        # Horarios
+        dias       = request.form.getlist("horario_dia[]")
+        inicios    = request.form.getlist("horario_inicio[]")
+        fines      = request.form.getlist("horario_fin[]")
+        actividades= request.form.getlist("horario_actividad[]")
+        instructores = request.form.getlist("horario_instructor[]")
+
+        for i in range(len(dias)):
+            if dias[i] and inicios[i] and fines[i] and actividades[i]:
+                db.session.add(PlanHorario(
+                    plan_id=plan.id,
+                    dia=dias[i],
+                    hora_inicio=dt.time.fromisoformat(inicios[i]),
+                    hora_fin=dt.time.fromisoformat(fines[i]),
+                    actividad=actividades[i].strip(),
+                    instructor=instructores[i].strip() if i < len(instructores) else ""
+                ))
+
+        db.session.commit()
+        flash(f"Plan '{nombre}' creado.", "success")
+        return redirect(url_for("planes"))
+    return render_template("nuevo_plan.html")
+
+
+@app.route("/ventas/planes/<int:plan_id>")
+def ver_plan(plan_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    plan = Plan.query.get(plan_id)
+    suscriptores = Suscripcion.query.filter_by(plan_id=plan_id).all()
+    return render_template("ver_plan.html", plan=plan, suscriptores=suscriptores)
+
+
+@app.route("/ventas/planes/<int:plan_id>/toggle")
+def toggle_plan(plan_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    plan = Plan.query.get(plan_id)
+    if plan:
+        plan.activo = not plan.activo
+        db.session.commit()
+        flash(f"Plan {'activado' if plan.activo else 'desactivado'}.", "success")
+    return redirect(url_for("planes"))
+
+
+@app.route("/ventas/planes/api")
+def api_planes():
+    if "user_id" not in session:
+        return jsonify([])
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    planes = Plan.query.filter_by(empresa=empresa, activo=True).all()
+    return jsonify([{
+        "id": p.id, "nombre": p.nombre, "costo": float(p.costo),
+        "frecuencia": p.frecuencia, "descripcion": p.descripcion or ""
+    } for p in planes])
+
+
+@app.route("/ventas/planes/<int:plan_id>/editar", methods=["GET","POST"])
+def editar_plan(plan_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    plan = Plan.query.get(plan_id)
+    if not plan:
+        return redirect(url_for("planes"))
+    if request.method == "POST":
+        import datetime as dt
+        plan.nombre      = request.form.get("nombre","").strip().title()
+        plan.descripcion = request.form.get("descripcion","").strip()
+        plan.costo       = float(request.form.get("costo", plan.costo))
+        plan.frecuencia  = request.form.get("frecuencia", plan.frecuencia)
+        plan.color       = request.form.get("color", plan.color)
+
+        # Actualizar incluye
+        PlanIncluye.query.filter_by(plan_id=plan.id).delete()
+        for item in request.form.getlist("incluye[]"):
+            if item.strip():
+                db.session.add(PlanIncluye(plan_id=plan.id, descripcion=item.strip()))
+
+        # Actualizar horarios
+        PlanHorario.query.filter_by(plan_id=plan.id).delete()
+        dias        = request.form.getlist("horario_dia[]")
+        inicios     = request.form.getlist("horario_inicio[]")
+        fines       = request.form.getlist("horario_fin[]")
+        actividades = request.form.getlist("horario_actividad[]")
+        instructores= request.form.getlist("horario_instructor[]")
+        for i in range(len(dias)):
+            if dias[i] and inicios[i] and fines[i] and actividades[i]:
+                db.session.add(PlanHorario(
+                    plan_id=plan.id,
+                    dia=dias[i],
+                    hora_inicio=dt.time.fromisoformat(inicios[i]),
+                    hora_fin=dt.time.fromisoformat(fines[i]),
+                    actividad=actividades[i].strip(),
+                    instructor=instructores[i].strip() if i < len(instructores) else ""
+                ))
+        db.session.commit()
+        flash(f"Plan actualizado.", "success")
+        return redirect(url_for("planes"))
+    return render_template("editar_plan.html", plan=plan)
+
+
+@app.route("/empresa/eliminar_usuario/<int:user_id>", methods=["POST"])
+def eliminar_usuario_empresa(user_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    admin = Usuario.query.get(session["user_id"])
+    if not admin.empresa_admin:
+        flash("No tienes permisos.", "danger")
+        return redirect(url_for("mi_empresa"))
+    user = Usuario.query.get(user_id)
+    if not user or user.empresa != admin.empresa:
+        flash("Usuario no encontrado.", "danger")
+        return redirect(url_for("mi_empresa"))
+    if user.empresa_admin:
+        flash("No puedes eliminar al administrador principal.", "warning")
+        return redirect(url_for("mi_empresa"))
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"Usuario {user.nombre} eliminado.", "success")
+    return redirect(url_for("mi_empresa"))
+
+
+@app.route("/empresa/configurar_timeout", methods=["POST"])
+def configurar_timeout():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    admin = Usuario.query.get(session["user_id"])
+    if not admin.empresa_admin:
+        flash("No tienes permisos.", "danger")
+        return redirect(url_for("mi_empresa"))
+    timeout = int(request.form.get("session_timeout", 120))
+    if timeout < 15: timeout = 15
+    if timeout > 480: timeout = 480
+    # Aplicar a todos los usuarios de la empresa
+    usuarios = Usuario.query.filter_by(empresa=admin.empresa).all()
+    for u in usuarios:
+        u.session_timeout = timeout
+    db.session.commit()
+    flash(f"Tiempo de sesion actualizado a {timeout} minutos.", "success")
+    return redirect(url_for("mi_empresa"))
+
+
+@app.route("/empresa/editar_usuario/<int:user_id>", methods=["GET","POST"])
+def editar_usuario_empresa(user_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    admin = Usuario.query.get(session["user_id"])
+    if not admin.empresa_admin:
+        flash("No tienes permisos.", "danger")
+        return redirect(url_for("mi_empresa"))
+    user = Usuario.query.get(user_id)
+    if not user or user.empresa != admin.empresa:
+        flash("Usuario no encontrado.", "danger")
+        return redirect(url_for("mi_empresa"))
+    if request.method == "POST":
+        user.nombre   = request.form.get("nombre", user.nombre).strip().title()
+        user.apellido = request.form.get("apellido", user.apellido).strip().title()
+        user.correo   = request.form.get("correo", user.correo).strip()
+        user.telefono = request.form.get("telefono", user.telefono).strip()
+        db.session.commit()
+        flash("Usuario actualizado.", "success")
+        return redirect(url_for("mi_empresa"))
+    return render_template("editar_usuario_empresa.html", user_data=user)
 
 
 # -----------------------------

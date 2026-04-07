@@ -1,0 +1,149 @@
+{% extends "panel_base.html" %}
+{% block title %}Editar plan — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-pencil-square"></i> Editar plan</div>
+    <a href="{{ url_for('planes') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+
+  <form method="POST">
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-info-circle"></i> Informacion del plan</h5></div>
+    <div style="padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="fi-group" style="grid-column:1/-1">
+        <label>Nombre del plan *</label>
+        <input type="text" name="nombre" value="{{ plan.nombre }}" required>
+      </div>
+      <div class="fi-group">
+        <label>Costo ($) *</label>
+        <input type="number" name="costo" value="{{ plan.costo }}" min="0" step="0.01" required>
+      </div>
+      <div class="fi-group">
+        <label>Frecuencia</label>
+        <select name="frecuencia" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="semanal" {% if plan.frecuencia=='semanal' %}selected{% endif %}>Semanal</option>
+          <option value="mensual" {% if plan.frecuencia=='mensual' %}selected{% endif %}>Mensual</option>
+          <option value="trimestral" {% if plan.frecuencia=='trimestral' %}selected{% endif %}>Trimestral</option>
+          <option value="anual" {% if plan.frecuencia=='anual' %}selected{% endif %}>Anual</option>
+        </select>
+      </div>
+      <div class="fi-group" style="grid-column:1/-1">
+        <label>Descripcion</label>
+        <textarea name="descripcion" rows="2"
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical">{{ plan.descripcion or '' }}</textarea>
+      </div>
+      <div class="fi-group">
+        <label>Color</label>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
+          {% for color in ["#561d9c","#1a7a4a","#b91c1c","#1d4ed8","#0f766e","#92400e"] %}
+          <div class="cdot" onclick="setColor('{{ color }}',this)"
+            style="width:28px;height:28px;border-radius:50%;background:{{ color }};cursor:pointer;border:{% if plan.color == color %}3px solid #2d0060{% else %}3px solid transparent{% endif %}"></div>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="color" id="colorInput" value="{{ plan.color }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-check-circle"></i> Que incluye</h5>
+      <button type="button" onclick="agregarItem()" class="btn-act btn-edit"><i class="bi bi-plus-lg"></i> Agregar</button>
+    </div>
+    <div style="padding:1.25rem" id="listaIncluye">
+      {% for item in plan.incluye %}
+      <div class="incluye-item" style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input type="text" name="incluye[]" value="{{ item.descripcion }}"
+          style="flex:1;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+        <button type="button" onclick="this.parentElement.remove()"
+          style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+          <i class="bi bi-trash"></i></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-clock"></i> Horarios</h5>
+      <button type="button" onclick="agregarHorario()" class="btn-act btn-edit"><i class="bi bi-plus-lg"></i> Agregar</button>
+    </div>
+    <div style="padding:1.25rem" id="listaHorarios">
+      {% if not plan.horarios %}
+      <div style="font-size:.82rem;color:#9c7fc0;text-align:center;padding:1rem" id="noHorarios">Sin horarios.</div>
+      {% endif %}
+      {% for h in plan.horarios %}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center">
+        <select name="horario_dia[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+          {% for dia in ["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"] %}
+          <option {% if h.dia == dia %}selected{% endif %}>{{ dia }}</option>
+          {% endfor %}
+        </select>
+        <input type="time" name="horario_inicio[]" value="{{ h.hora_inicio.strftime('%H:%M') }}"
+          style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+        <input type="time" name="horario_fin[]" value="{{ h.hora_fin.strftime('%H:%M') }}"
+          style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+        <input type="text" name="horario_actividad[]" value="{{ h.actividad }}"
+          style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+        <input type="text" name="horario_instructor[]" value="{{ h.instructor or '' }}"
+          style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+        <button type="button" onclick="this.parentElement.remove()"
+          style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+          <i class="bi bi-trash"></i></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+    <i class="bi bi-check-lg"></i> Guardar cambios
+  </button>
+  </form>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+
+<script>
+function setColor(color, el) {
+  document.querySelectorAll('.cdot').forEach(d => d.style.border = '3px solid transparent');
+  el.style.border = '3px solid #2d0060';
+  document.getElementById('colorInput').value = color;
+}
+function agregarItem() {
+  const div = document.createElement('div');
+  div.className = 'incluye-item';
+  div.style = 'display:flex;gap:.5rem;margin-bottom:.5rem';
+  div.innerHTML = `<input type="text" name="incluye[]" placeholder="Ej. Acceso al gimnasio"
+    style="flex:1;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+    <button type="button" onclick="this.parentElement.remove()"
+      style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+      <i class="bi bi-trash"></i></button>`;
+  document.getElementById('listaIncluye').appendChild(div);
+}
+function agregarHorario() {
+  const noH = document.getElementById('noHorarios');
+  if(noH) noH.style.display='none';
+  const div = document.createElement('div');
+  div.style = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center';
+  div.innerHTML = `
+    <select name="horario_dia[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+      <option>Lunes</option><option>Martes</option><option>Miercoles</option>
+      <option>Jueves</option><option>Viernes</option><option>Sabado</option><option>Domingo</option>
+    </select>
+    <input type="time" name="horario_inicio[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;height:38px;background:#fdf9ff;outline:none">
+    <input type="time" name="horario_fin[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;height:38px;background:#fdf9ff;outline:none">
+    <input type="text" name="horario_actividad[]" placeholder="Actividad" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;height:38px;background:#fdf9ff;outline:none">
+    <input type="text" name="horario_instructor[]" placeholder="Instructor" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;height:38px;background:#fdf9ff;outline:none">
+    <button type="button" onclick="this.parentElement.remove()"
+      style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+      <i class="bi bi-trash"></i></button>`;
+  document.getElementById('listaHorarios').appendChild(div);
+}
+</script>
+{% endblock %}

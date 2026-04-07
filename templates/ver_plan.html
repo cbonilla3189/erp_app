@@ -1,0 +1,80 @@
+{% extends "panel_base.html" %}
+{% block title %}{{ plan.nombre }} — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-grid-1x2"></i> {{ plan.nombre }}</div>
+    <a href="{{ url_for('planes') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Planes</a>
+  </div>
+
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div style="height:5px;background:{{ plan.color }}"></div>
+    <div style="padding:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem">
+        <div>
+          <div style="font-size:1.2rem;font-weight:800;color:#2d0060">{{ plan.nombre }}</div>
+          <div style="font-size:.85rem;color:#9c7fc0;margin-top:.2rem">{{ plan.descripcion or '' }}</div>
+          <span style="display:inline-block;margin-top:.5rem;background:#f0e8ff;color:#561d9c;padding:.2rem .65rem;border-radius:20px;font-size:.75rem;font-weight:700">
+            {{ "Activo" if plan.activo else "Inactivo" }}
+          </span>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.6rem;font-weight:800;color:#1a7a4a">${{ "%.2f"|format(plan.costo) }}</div>
+          <div style="font-size:.8rem;color:#9c7fc0">/ {{ plan.frecuencia }}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        {% if plan.incluye %}
+        <div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b3fe3;margin-bottom:.6rem">Que incluye</div>
+          {% for item in plan.incluye %}
+          <div style="font-size:.88rem;color:#1a0035;display:flex;align-items:center;gap:.4rem;padding:.2rem 0">
+            <span style="color:#1a7a4a;font-weight:700;font-size:1rem">✓</span> {{ item.descripcion }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if plan.horarios %}
+        <div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b3fe3;margin-bottom:.6rem">Horarios</div>
+          {% for h in plan.horarios|sort(attribute='dia') %}
+          <div style="background:#f8f5ff;border-radius:8px;padding:.5rem .75rem;margin-bottom:.4rem">
+            <div style="font-size:.78rem;font-weight:700;color:#2d0060">{{ h.dia }} · {{ h.hora_inicio.strftime('%I:%M %p') }} - {{ h.hora_fin.strftime('%I:%M %p') }}</div>
+            <div style="font-size:.78rem;color:#9c7fc0">{{ h.actividad }}{% if h.instructor %} · {{ h.instructor }}{% endif %}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Suscriptores -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-people"></i> Suscriptores activos</h5>
+      <span class="count">{{ suscriptores|length }}</span>
+    </div>
+    {% if suscriptores %}
+    <table class="aruna-table">
+      <thead><tr><th>Cliente</th><th>Inicio</th><th>Proximo cobro</th><th>Estado</th></tr></thead>
+      <tbody>
+        {% for s in suscriptores %}
+        <tr>
+          <td style="font-weight:600">{{ s.cliente_nombre }}</td>
+          <td style="color:#9c7fc0;font-size:.8rem">{{ s.fecha_inicio.strftime('%d/%m/%Y') if s.fecha_inicio else '—' }}</td>
+          <td style="color:#9c7fc0;font-size:.8rem">{{ s.proximo_cobro.strftime('%d/%m/%Y') if s.proximo_cobro else '—' }}</td>
+          <td><span class="badge {% if s.estado=='activa' %}badge-ok{% else %}badge-no{% endif %}">{{ s.estado }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.88rem">Sin suscriptores en este plan aun.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

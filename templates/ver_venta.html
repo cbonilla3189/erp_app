@@ -1,0 +1,106 @@
+{% extends "panel_base.html" %}
+{% block title %}{{ venta.numero_factura }} — aruna{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-receipt"></i> {{ venta.numero_factura }}</div>
+  <a href="{{ url_for('ventas') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+</div>
+
+<div style="max-width:780px;margin:0 auto">
+  <div class="panel-card">
+    <div style="padding:2rem">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:2px solid #f0eaf7">
+        <div>
+          <div style="font-size:1.5rem;font-weight:800;color:#2d0060">{{ empresa.empresa or 'aruna' }}</div>
+          <div style="font-size:.85rem;color:#9c7fc0;margin-top:.25rem">{{ empresa.correo }}</div>
+          {% if empresa.ruc %}<div style="font-size:.82rem;color:#9c7fc0">RUC: {{ empresa.ruc }}-{{ empresa.dv }}</div>{% endif %}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.1rem;font-weight:800;color:#561d9c;font-family:monospace">{{ venta.numero_factura }}</div>
+          <div style="font-size:.82rem;color:#9c7fc0">{{ venta.creado_en.strftime('%d/%m/%Y') }}</div>
+          <span style="background:{% if venta.documento=='factura' %}#f0e8ff{% else %}#e8f8f0{% endif %};
+            color:{% if venta.documento=='factura' %}#561d9c{% else %}#1a7a4a{% endif %};
+            padding:.2rem .65rem;border-radius:20px;font-size:.75rem;font-weight:700">
+            {{ venta.documento|upper }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div style="margin-bottom:1.75rem">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b3fe3;margin-bottom:.5rem">Facturar a</div>
+        <div style="font-size:1rem;font-weight:700;color:#1a0035">{{ venta.cliente_nombre or 'Cliente general' }}</div>
+        {% if venta.cliente_ruc %}<div style="font-size:.85rem;color:#9c7fc0">RUC: {{ venta.cliente_ruc }}</div>{% endif %}
+        {% if venta.cliente_correo %}<div style="font-size:.85rem;color:#9c7fc0">{{ venta.cliente_correo }}</div>{% endif %}
+      </div>
+
+      <!-- Items -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;font-size:.9rem">
+        <thead>
+          <tr style="background:#f8f5ff;border-bottom:2px solid #ede8f7">
+            <th style="padding:.6rem 1rem;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b3fe3">Descripcion</th>
+            <th style="padding:.6rem 1rem;text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b3fe3">Cant.</th>
+            <th style="padding:.6rem 1rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b3fe3">Precio</th>
+            <th style="padding:.6rem 1rem;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8b3fe3">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in venta.items %}
+          <tr style="border-bottom:1px solid #f5f0fc">
+            <td style="padding:.7rem 1rem;color:#1a0035;font-weight:500">{{ item.descripcion }}</td>
+            <td style="padding:.7rem 1rem;text-align:center;color:#9c7fc0">{{ item.cantidad }}</td>
+            <td style="padding:.7rem 1rem;text-align:right;color:#9c7fc0">${{ "%.2f"|format(item.precio_unitario) }}</td>
+            <td style="padding:.7rem 1rem;text-align:right;font-weight:700;color:#2d0060">${{ "%.2f"|format(item.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Totales -->
+      <div style="display:flex;justify-content:flex-end">
+        <div style="min-width:260px">
+          <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.88rem;color:#9c7fc0;border-bottom:1px solid #f0eaf7">
+            <span>Subtotal</span><span>${{ "%.2f"|format(venta.subtotal) }}</span>
+          </div>
+          {% if venta.descuento > 0 %}
+          <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.88rem;color:#9c7fc0;border-bottom:1px solid #f0eaf7">
+            <span>Descuento</span><span>-${{ "%.2f"|format(venta.descuento) }}</span>
+          </div>
+          {% endif %}
+          {% if venta.itbms > 0 %}
+          <div style="display:flex;justify-content:space-between;padding:.4rem 0;font-size:.88rem;color:#9c7fc0;border-bottom:1px solid #f0eaf7">
+            <span>ITBMS (7%)</span><span>${{ "%.2f"|format(venta.itbms) }}</span>
+          </div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between;padding:.6rem 0;font-size:1.1rem;font-weight:800;color:#2d0060">
+            <span>TOTAL</span><span>${{ "%.2f"|format(venta.total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if venta.notas %}
+      <div style="margin-top:1.5rem;padding:1rem;background:#f8f5ff;border-radius:10px;font-size:.85rem;color:#7c5fa0">
+        <strong>Notas:</strong> {{ venta.notas }}
+      </div>
+      {% endif %}
+
+      <div style="display:flex;gap:.75rem;margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid #f0eaf7">
+        <button onclick="window.print()"
+          style="flex:1;padding:.7rem;background:#f0e8ff;color:#561d9c;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-printer"></i> Imprimir / PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .sidebar, .topbar, .section-title, .btn-act, button { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+  .panel-card { box-shadow: none !important; border: none !important; }
+}
+</style>
+{% endblock %}

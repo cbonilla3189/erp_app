@@ -1,0 +1,166 @@
+{% extends "panel_base.html" %}
+{% block title %}Nuevo cliente — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-person-plus"></i> Nuevo cliente</div>
+    <a href="{{ url_for('clientes') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}
+      <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
+        {% if category=='success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
+        {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">{{ message }}</div>
+    {% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- Paso 1: Seleccion tipo -->
+  <div id="paso1">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-person-badge"></i> Tipo de cliente</h5></div>
+      <div style="padding:1.75rem;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+
+        <div onclick="selectTipo('natural')" id="card-natural"
+          style="border:2px solid #ede8f7;border-radius:14px;padding:1.75rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2.5rem;margin-bottom:.75rem">👤</div>
+          <div style="font-size:1rem;font-weight:800;color:#2d0060;margin-bottom:.4rem">Cliente Natural</div>
+          <div style="font-size:.82rem;color:#9c7fc0;line-height:1.5">Persona individual.<br>Nombre, apellido, cedula y datos de contacto.</div>
+        </div>
+
+        <div onclick="selectTipo('legal')" id="card-legal"
+          style="border:2px solid #ede8f7;border-radius:14px;padding:1.75rem;cursor:pointer;text-align:center;transition:all .2s">
+          <div style="font-size:2.5rem;margin-bottom:.75rem">🏢</div>
+          <div style="font-size:1rem;font-weight:800;color:#2d0060;margin-bottom:.4rem">Cliente Legal</div>
+          <div style="font-size:.82rem;color:#9c7fc0;line-height:1.5">Empresa o persona juridica.<br>Razon social, RUC, DV y apoderado legal.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Paso 2: Formulario -->
+  <div id="paso2" style="display:none">
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5 id="formTitle"><i class="bi bi-person"></i> Datos del cliente</h5>
+        <span id="tipoBadge" style="font-size:.75rem;font-weight:700;padding:.2rem .65rem;border-radius:20px;background:#f0e8ff;color:#561d9c"></span>
+      </div>
+      <div style="padding:1.75rem">
+        <form method="POST">
+          <input type="hidden" name="tipo_cliente" id="tipo_cliente">
+
+          <!-- Natural -->
+          <div id="form-natural" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+              <div class="fi-group"><label>Nombre *</label><input type="text" name="nombre" id="natural_nombre"></div>
+              <div class="fi-group"><label>Apellido *</label><input type="text" name="apellido" id="natural_apellido"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+              <div class="fi-group"><label>Cedula / Pasaporte</label><input type="text" name="cedula" placeholder="8-888-8888"></div>
+              <div class="fi-group"><label>Telefono</label><input type="text" name="telefono" placeholder="+507 6000-0000"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+              <div class="fi-group"><label>Correo electronico</label><input type="email" name="correo"></div>
+              <div class="fi-group"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento"></div>
+            </div>
+            <div class="fi-group" style="margin-bottom:1.5rem">
+              <label>Direccion</label>
+              <textarea name="direccion" rows="2"
+                style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+            </div>
+          </div>
+
+          <!-- Legal -->
+          <div id="form-legal" style="display:none">
+            <div style="background:#f8f5ff;border-radius:10px;padding:1rem;margin-bottom:1rem">
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b3fe3;margin-bottom:.75rem">Datos de la empresa</div>
+              <div class="fi-group" style="margin-bottom:.75rem">
+                <label>Razon social *</label>
+                <input type="text" name="razon_social" placeholder="Nombre legal de la empresa">
+              </div>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+                <div class="fi-group"><label>RUC *</label><input type="text" name="ruc" placeholder="888-888-8888"></div>
+                <div class="fi-group"><label>DV</label><input type="text" name="dv" placeholder="55"></div>
+                <div class="fi-group"><label>Tipo</label>
+                  <select name="tipo_empresa"
+                    style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+                    <option>S.A.</option>
+                    <option>S.R.L.</option>
+                    <option>Fundacion</option>
+                    <option>ONG</option>
+                    <option>Otro</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                <div class="fi-group"><label>Telefono empresa</label><input type="text" name="telefono_empresa"></div>
+                <div class="fi-group"><label>Correo empresa</label><input type="email" name="correo_empresa"></div>
+              </div>
+            </div>
+
+            <div style="background:#f0e8ff;border-radius:10px;padding:1rem;margin-bottom:1.5rem">
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8b3fe3;margin-bottom:.75rem">Apoderado legal / Contacto principal</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+                <div class="fi-group"><label>Nombre *</label><input type="text" name="nombre" placeholder="Nombre del apoderado"></div>
+                <div class="fi-group"><label>Apellido *</label><input type="text" name="apellido" placeholder="Apellido del apoderado"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                <div class="fi-group"><label>Cedula</label><input type="text" name="cedula_apoderado" placeholder="8-888-8888"></div>
+                <div class="fi-group"><label>Telefono directo</label><input type="text" name="telefono"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:.75rem">
+            <button type="button" onclick="volverPaso1()"
+              class="btn-act btn-edit" style="padding:.65rem 1.25rem">
+              <i class="bi bi-arrow-left"></i> Cambiar tipo
+            </button>
+            <button type="submit"
+              style="flex:1;padding:.75rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+              <i class="bi bi-check-lg"></i> Registrar cliente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input,.fi-group select{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+.fi-group input:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.1)}
+#card-natural:hover,#card-legal:hover{border-color:#8b3fe3;transform:translateY(-2px);box-shadow:0 4px 16px rgba(86,29,156,.12)}
+</style>
+
+<script>
+function selectTipo(tipo) {
+  document.getElementById('tipo_cliente').value = tipo;
+  document.getElementById('paso1').style.display = 'none';
+  document.getElementById('paso2').style.display = 'block';
+  if (tipo === 'natural') {
+    document.getElementById('form-natural').style.display = 'block';
+    document.getElementById('form-legal').style.display = 'none';
+    document.getElementById('formTitle').innerHTML = '<i class="bi bi-person"></i> Cliente Natural';
+    document.getElementById('tipoBadge').textContent = 'Natural';
+    document.getElementById('natural_nombre').focus();
+  } else {
+    document.getElementById('form-natural').style.display = 'none';
+    document.getElementById('form-legal').style.display = 'block';
+    document.getElementById('formTitle').innerHTML = '<i class="bi bi-building"></i> Cliente Legal';
+    document.getElementById('tipoBadge').textContent = 'Legal';
+    document.getElementById('tipoBadge').style.background = '#e8f0ff';
+    document.getElementById('tipoBadge').style.color = '#1d4ed8';
+  }
+}
+
+function volverPaso1() {
+  document.getElementById('paso1').style.display = 'block';
+  document.getElementById('paso2').style.display = 'none';
+}
+</script>
+{% endblock %}

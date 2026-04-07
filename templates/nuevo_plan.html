@@ -1,0 +1,129 @@
+{% extends "panel_base.html" %}
+{% block title %}Nuevo plan — aruna{% endblock %}
+
+{% block content %}
+<div style="max-width:720px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-plus-square"></i> Nuevo plan</div>
+    <a href="{{ url_for('planes') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+
+  <form method="POST">
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-info-circle"></i> Informacion del plan</h5></div>
+    <div style="padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="fi-group" style="grid-column:1/-1">
+        <label>Nombre del plan *</label>
+        <input type="text" name="nombre" placeholder="Ej. Plan Basico, Membresia Gold" required>
+      </div>
+      <div class="fi-group">
+        <label>Costo ($) *</label>
+        <input type="number" name="costo" min="0" step="0.01" required>
+      </div>
+      <div class="fi-group">
+        <label>Frecuencia</label>
+        <select name="frecuencia" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="semanal">Semanal</option>
+          <option value="mensual" selected>Mensual</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="anual">Anual</option>
+        </select>
+      </div>
+      <div class="fi-group" style="grid-column:1/-1">
+        <label>Descripcion</label>
+        <textarea name="descripcion" rows="2" placeholder="Describe brevemente el plan..."
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+      </div>
+      <div class="fi-group">
+        <label>Color</label>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
+          <div class="cdot" onclick="setColor('#561d9c',this)" style="width:28px;height:28px;border-radius:50%;background:#561d9c;cursor:pointer;border:3px solid #2d0060"></div>
+          <div class="cdot" onclick="setColor('#1a7a4a',this)" style="width:28px;height:28px;border-radius:50%;background:#1a7a4a;cursor:pointer;border:3px solid transparent"></div>
+          <div class="cdot" onclick="setColor('#b91c1c',this)" style="width:28px;height:28px;border-radius:50%;background:#b91c1c;cursor:pointer;border:3px solid transparent"></div>
+          <div class="cdot" onclick="setColor('#1d4ed8',this)" style="width:28px;height:28px;border-radius:50%;background:#1d4ed8;cursor:pointer;border:3px solid transparent"></div>
+          <div class="cdot" onclick="setColor('#0f766e',this)" style="width:28px;height:28px;border-radius:50%;background:#0f766e;cursor:pointer;border:3px solid transparent"></div>
+          <div class="cdot" onclick="setColor('#92400e',this)" style="width:28px;height:28px;border-radius:50%;background:#92400e;cursor:pointer;border:3px solid transparent"></div>
+        </div>
+        <input type="hidden" name="color" id="colorInput" value="#561d9c">
+      </div>
+    </div>
+  </div>
+
+  <!-- Incluye -->
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-check-circle"></i> Que incluye</h5>
+      <button type="button" onclick="agregarItem()" class="btn-act btn-edit"><i class="bi bi-plus-lg"></i> Agregar</button>
+    </div>
+    <div style="padding:1.25rem" id="listaIncluye">
+      <div class="incluye-item" style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input type="text" name="incluye[]" placeholder="Ej. Acceso al gimnasio, Clases ilimitadas"
+          style="flex:1;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+      </div>
+    </div>
+  </div>
+
+  <!-- Horarios -->
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-clock"></i> Horarios (opcional)</h5>
+      <button type="button" onclick="agregarHorario()" class="btn-act btn-edit"><i class="bi bi-plus-lg"></i> Agregar</button>
+    </div>
+    <div style="padding:1.25rem" id="listaHorarios">
+      <div style="font-size:.82rem;color:#9c7fc0;text-align:center;padding:1rem" id="noHorarios">
+        Sin horarios. Haz click en Agregar para definir clases o sesiones.
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+    <i class="bi bi-plus-lg"></i> Crear plan
+  </button>
+  </form>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+
+<script>
+function setColor(color, el) {
+  document.querySelectorAll('.cdot').forEach(d => d.style.border = '3px solid transparent');
+  el.style.border = '3px solid #2d0060';
+  document.getElementById('colorInput').value = color;
+}
+
+function agregarItem() {
+  const div = document.createElement('div');
+  div.className = 'incluye-item';
+  div.style = 'display:flex;gap:.5rem;margin-bottom:.5rem';
+  div.innerHTML = `<input type="text" name="incluye[]" placeholder="Ej. Acceso al gimnasio"
+    style="flex:1;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+    <button type="button" onclick="this.parentElement.remove()"
+      style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+      <i class="bi bi-trash"></i></button>`;
+  document.getElementById('listaIncluye').appendChild(div);
+}
+
+function agregarHorario() {
+  document.getElementById('noHorarios').style.display = 'none';
+  const div = document.createElement('div');
+  div.style = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center';
+  div.innerHTML = `
+    <select name="horario_dia[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+      <option>Lunes</option><option>Martes</option><option>Miercoles</option>
+      <option>Jueves</option><option>Viernes</option><option>Sabado</option><option>Domingo</option>
+    </select>
+    <input type="time" name="horario_inicio[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+    <input type="time" name="horario_fin[]" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+    <input type="text" name="horario_actividad[]" placeholder="Actividad" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+    <input type="text" name="horario_instructor[]" placeholder="Instructor" style="padding:.45rem .65rem;border:1.5px solid #e2d6f3;border-radius:8px;font-size:.85rem;color:#1a0035;background:#fdf9ff;outline:none;height:38px">
+    <button type="button" onclick="this.parentElement.remove()"
+      style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+      <i class="bi bi-trash"></i></button>`;
+  document.getElementById('listaHorarios').appendChild(div);
+}
+</script>
+{% endblock %}

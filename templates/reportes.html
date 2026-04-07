@@ -2,249 +2,400 @@
 {% block title %}Reportes — aruna{% endblock %}
 
 {% block content %}
-<div class="section-title"><i class="bi bi-bar-chart-line"></i> Reportes</div>
-
-<div class="stat-grid" style="margin-bottom:1.75rem">
-  <div class="stat-card">
-    <div class="stat-icon si-purple">📦</div>
-    <div>
-      <div class="stat-value">{{ total }}</div>
-      <div class="stat-label">Total productos</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon si-green">💵</div>
-    <div>
-      <div class="stat-value">${{ "%.2f"|format(valor_total) }}</div>
-      <div class="stat-label">Valor en inventario</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon si-amber">⚠️</div>
-    <div>
-      <div class="stat-value">{{ bajo_stock }}</div>
-      <div class="stat-label">Bajo stock (según mínimo)</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon si-pink">🚫</div>
-    <div>
-      <div class="stat-value">{{ sin_stock }}</div>
-      <div class="stat-label">Sin stock</div>
-    </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-bar-chart-line"></i> Reportes</div>
+  <div style="display:flex;gap:.5rem">
+    <a href="{{ url_for('exportar_csv') }}" style="display:inline-flex;align-items:center;gap:.3rem;padding:.45rem .85rem;background:#e8f8f0;border:1px solid #a8e6c3;border-radius:8px;color:#1a7a4a;font-size:.82rem;font-weight:600;text-decoration:none">
+      <i class="bi bi-download"></i> CSV Inventario
+    </a>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+<!-- Tabs -->
+<div style="display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap">
+  <button onclick="showRTab('rt-inventario',this)" id="btn-rt-inventario"
+    style="padding:.45rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;box-shadow:0 4px 12px rgba(86,29,156,.25)">
+    📦 Inventario
+  </button>
+  <button onclick="showRTab('rt-ventas',this)" id="btn-rt-ventas"
+    style="padding:.45rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;background:#f0e8ff;color:#8b3fe3">
+    💰 Ventas
+  </button>
+  <button onclick="showRTab('rt-suscripciones',this)" id="btn-rt-suscripciones"
+    style="padding:.45rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;background:#f0e8ff;color:#8b3fe3">
+    🔄 Suscripciones
+  </button>
+  <button onclick="showRTab('rt-servicios',this)" id="btn-rt-servicios"
+    style="padding:.45rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;background:#f0e8ff;color:#8b3fe3">
+    📋 Servicios
+  </button>
+</div>
 
-  <!-- Productos por categoria -->
-  <div class="panel-card">
-    <div class="panel-card-header">
-      <h5><i class="bi bi-pie-chart"></i> Productos por categoría</h5>
-    </div>
-    <table class="aruna-table">
-      <thead>
-        <tr><th>Categoría</th><th>Cantidad</th><th>%</th></tr>
-      </thead>
-      <tbody>
-        {% for cat, cnt in categorias.items() %}
-        <tr>
-          <td style="font-weight:600">{{ cat }}</td>
-          <td>{{ cnt }}</td>
-          <td>
-            <div style="display:flex;align-items:center;gap:.5rem">
-              <div style="flex:1;background:#f0eaf7;border-radius:20px;height:6px">
-                <div style="width:{{ (cnt/total*100)|int }}%;background:linear-gradient(135deg,#561d9c,#8b3fe3);height:6px;border-radius:20px"></div>
-              </div>
-              <span style="font-size:.75rem;color:#8b3fe3;font-weight:600">{{ (cnt/total*100)|int }}%</span>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<!-- ── INVENTARIO ── -->
+<div id="rt-inventario">
+  <div class="stat-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon si-purple">📦</div><div><div class="stat-value">{{ total }}</div><div class="stat-label">Total productos</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green">💵</div><div><div class="stat-value">${{ "%.2f"|format(valor_total) }}</div><div class="stat-label">Valor en inventario</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-amber">⚠️</div><div><div class="stat-value">{{ bajo_stock }}</div><div class="stat-label">Bajo stock</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-pink">🚫</div><div><div class="stat-value">{{ sin_stock }}</div><div class="stat-label">Sin stock</div></div></div>
   </div>
 
-  <!-- Alertas de stock -->
-  <div class="panel-card">
-    <div class="panel-card-header">
-      <h5><i class="bi bi-exclamation-triangle"></i> Alertas de stock</h5>
-      {% if alertas|length > 10 %}
-      <button onclick="document.getElementById('modalAlertas').style.display='flex'"
-        style="font-size:.78rem;color:#8b3fe3;background:#f0e8ff;border:none;padding:.2rem .65rem;border-radius:20px;font-weight:600;cursor:pointer">
-        Ver todos ({{ alertas|length }})
-      </button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-trophy"></i> Mas comprados (mayor stock)</h5></div>
+      <table class="aruna-table">
+        <thead><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr></thead>
+        <tbody>
+          {% for p in prods_mas_comprados %}
+          <tr>
+            <td style="font-weight:600">{{ p.nombre }}</td>
+            <td style="font-weight:700;color:#1a7a4a">{{ p.cantidad }}</td>
+            <td>${{ "%.2f"|format(p.precio * p.cantidad) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-arrow-down-circle"></i> Menos comprados (menor stock)</h5></div>
+      <table class="aruna-table">
+        <thead><tr><th>Producto</th><th>Cantidad</th><th>Valor</th></tr></thead>
+        <tbody>
+          {% for p in prods_menos_comprados %}
+          <tr>
+            <td style="font-weight:600">{{ p.nombre }}</td>
+            <td style="font-weight:700;color:#92400e">{{ p.cantidad }}</td>
+            <td>${{ "%.2f"|format(p.precio * p.cantidad) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-fire"></i> Mas vendidos</h5></div>
+      {% if prods_mas_vendidos %}
+      <table class="aruna-table">
+        <thead><tr><th>Producto</th><th>Unidades</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for nombre, data in prods_mas_vendidos %}
+          <tr>
+            <td style="font-weight:600">{{ nombre }}</td>
+            <td style="font-weight:700;color:#1a7a4a">{{ data.cantidad|int }}</td>
+            <td>${{ "%.2f"|format(data.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin ventas registradas aun.</div>
       {% endif %}
     </div>
-    {% if alertas %}
-    <table class="aruna-table">
-      <thead>
-        <tr><th>Producto</th><th>Cantidad</th><th>Stock mín.</th><th>Estado</th></tr>
-      </thead>
-      <tbody>
-        {% for p in alertas[:10] %}
-        <tr>
-          <td style="font-weight:600">{{ p.nombre }}</td>
-          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% else %}#92400e{% endif %}">{{ p.cantidad }}</td>
-          <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
-          <td>
-            {% if p.cantidad == 0 %}
-              <span class="badge badge-no">Sin stock</span>
-            {% else %}
-              <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% if alertas|length > 10 %}
-    <div style="padding:.75rem 1.25rem;border-top:1px solid #f0eaf7;text-align:center">
-      <button onclick="document.getElementById('modalAlertas').style.display='flex'"
-        style="background:none;border:none;color:#8b3fe3;font-size:.85rem;font-weight:600;cursor:pointer">
-        Ver los {{ alertas|length - 10 }} restantes →
-      </button>
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-arrow-down"></i> Menos vendidos</h5></div>
+      {% if prods_menos_vendidos %}
+      <table class="aruna-table">
+        <thead><tr><th>Producto</th><th>Unidades</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for nombre, data in prods_menos_vendidos %}
+          <tr>
+            <td style="font-weight:600">{{ nombre }}</td>
+            <td style="font-weight:700;color:#92400e">{{ data.cantidad|int }}</td>
+            <td>${{ "%.2f"|format(data.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin ventas registradas aun.</div>
+      {% endif %}
     </div>
-    {% endif %}
-    {% else %}
-    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.88rem">
-      ✅ Todos los productos tienen stock suficiente según su mínimo configurado
-    </div>
-    {% endif %}
   </div>
 
-  <!-- Modal todas las alertas -->
-  <div id="modalAlertas" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:700px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column">
-      <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:.95rem;font-weight:700;color:#2d0060">Todas las alertas de stock ({{ alertas|length }})</span>
-        <button onclick="document.getElementById('modalAlertas').style.display='none'"
-          style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0;line-height:1">×</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-pie-chart"></i> Por categoria</h5></div>
+      <table class="aruna-table">
+        <thead><tr><th>Categoria</th><th>Productos</th><th>%</th></tr></thead>
+        <tbody>
+          {% for cat, cnt in categorias.items() %}
+          <tr>
+            <td style="font-weight:600">{{ cat }}</td>
+            <td>{{ cnt }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <div style="flex:1;background:#f0eaf7;border-radius:20px;height:6px">
+                  <div style="width:{{ (cnt/total*100)|int }}%;background:linear-gradient(135deg,#561d9c,#8b3fe3);height:6px;border-radius:20px"></div>
+                </div>
+                <span style="font-size:.75rem;color:#8b3fe3;font-weight:600">{{ (cnt/total*100)|int }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <h5><i class="bi bi-exclamation-triangle"></i> Alertas de stock</h5>
       </div>
-      <div style="overflow-y:auto;flex:1">
-        <table class="aruna-table">
-          <thead>
-            <tr><th>Producto</th><th>Categoría</th><th>Cantidad</th><th>Stock mín.</th><th>Estado</th></tr>
-          </thead>
-          <tbody>
-            {% for p in alertas %}
-            <tr>
-              <td style="font-weight:600">{{ p.nombre }}</td>
-              <td>{{ p.categoria or "—" }}</td>
-              <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% else %}#92400e{% endif %}">{{ p.cantidad }}</td>
-              <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
-              <td>
-                {% if p.cantidad == 0 %}
-                  <span class="badge badge-no">Sin stock</span>
-                {% else %}
-                  <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      {% if alertas %}
+      <table class="aruna-table">
+        <thead><tr><th>Producto</th><th>Cantidad</th><th>Min.</th><th>Estado</th></tr></thead>
+        <tbody>
+          {% for p in alertas[:10] %}
+          <tr>
+            <td style="font-weight:600">{{ p.nombre }}</td>
+            <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% else %}#92400e{% endif %}">{{ p.cantidad }}</td>
+            <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
+            <td>{% if p.cantidad == 0 %}<span class="badge badge-no">Sin stock</span>{% else %}<span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">✅ Todo el stock esta en orden.</div>
+      {% endif %}
     </div>
   </div>
-</div>
 
-<!-- Reporte por campo personalizado -->
-{% if campos %}
-<div class="panel-card" style="margin-bottom:1.25rem">
-  <div class="panel-card-header">
-    <h5><i class="bi bi-filter-square"></i> Reporte por campo personalizado</h5>
-  </div>
-  <div style="padding:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem;align-items:center">
-    {% for campo in campos %}
-    <a href="{{ url_for('reporte_por_campo', campo_id=campo.id) }}"
-       style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:#f0e8ff;border:1.5px solid #ddd0f7;border-radius:10px;color:#561d9c;font-size:.85rem;font-weight:600;text-decoration:none;transition:all .15s">
-      <i class="bi bi-tag"></i> {{ campo.nombre }}
-    </a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-<!-- Tabla completa -->
-<div class="panel-card">
-  <div class="panel-card-header">
-    <h5><i class="bi bi-table"></i> Resumen completo de inventario</h5>
-    <div style="display:flex;gap:.5rem;align-items:center">
-      <span class="count">{{ total }} productos · ${{ "%.2f"|format(valor_total) }}</span>
-      <a href="{{ url_for('exportar_csv') }}" style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;background:#e8f8f0;border:1px solid #a8e6c3;border-radius:8px;color:#1a7a4a;font-size:.78rem;font-weight:600;text-decoration:none">
-        <i class="bi bi-download"></i> CSV
+  {% if campos %}
+  <div class="panel-card" style="margin-top:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-filter-square"></i> Reporte por campo personalizado</h5></div>
+    <div style="padding:1.25rem;display:flex;flex-wrap:wrap;gap:.75rem">
+      {% for campo in campos %}
+      <a href="{{ url_for('reporte_por_campo', campo_id=campo.id) }}"
+        style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;background:#f0e8ff;border:1.5px solid #ddd0f7;border-radius:10px;color:#561d9c;font-size:.85rem;font-weight:600;text-decoration:none">
+        <i class="bi bi-tag"></i> {{ campo.nombre }}
       </a>
-      <button onclick="document.getElementById('modalEmail').style.display='flex'"
-        style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;background:#f0e8ff;border:1px solid #ddd0f7;border-radius:8px;color:#561d9c;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid #ddd0f7">
-        <i class="bi bi-envelope"></i> Enviar
-      </button>
+      {% endfor %}
     </div>
   </div>
-  <div style="overflow-x:auto">
+  {% endif %}
+</div>
+
+<!-- ── VENTAS ── -->
+<div id="rt-ventas" style="display:none">
+  <div class="stat-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon si-purple">📅</div><div><div class="stat-value">${{ "%.2f"|format(total_hoy) }}</div><div class="stat-label">Hoy ({{ ventas_hoy|length }} ventas)</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green">📆</div><div><div class="stat-value">${{ "%.2f"|format(total_semana) }}</div><div class="stat-label">Esta semana ({{ ventas_semana|length }})</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-pink">🗓️</div><div><div class="stat-value">${{ "%.2f"|format(total_mes) }}</div><div class="stat-label">Este mes ({{ ventas_mes|length }})</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-amber">💰</div><div><div class="stat-value">${{ "%.2f"|format(total_general) }}</div><div class="stat-label">Total historico</div></div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-credit-card"></i> Por metodo de pago</h5></div>
+      <table class="aruna-table">
+        <thead><tr><th>Metodo</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for metodo, monto in metodos.items() %}
+          <tr>
+            <td style="font-weight:600;text-transform:capitalize">{{ metodo }}</td>
+            <td style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(monto) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-trophy"></i> Top 5 clientes</h5></div>
+      {% if top_clientes %}
+      <table class="aruna-table">
+        <thead><tr><th>Cliente</th><th>Compras</th><th>Total</th></tr></thead>
+        <tbody>
+          {% for nombre, data in top_clientes %}
+          <tr>
+            <td style="font-weight:600">{{ nombre }}</td>
+            <td style="color:#9c7fc0">{{ data.count }}</td>
+            <td style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(data.total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin ventas aun.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-receipt"></i> Ultimas ventas del mes</h5></div>
+    {% if ventas_mes %}
+    <div style="overflow-x:auto">
+      <table class="aruna-table">
+        <thead><tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Total</th><th>Metodo</th><th>Fecha</th></tr></thead>
+        <tbody>
+          {% for v in ventas_mes %}
+          <tr>
+            <td style="font-family:monospace;color:#561d9c;font-weight:700">{{ v.numero_factura }}</td>
+            <td style="font-weight:600">{{ v.cliente_nombre or 'General' }}</td>
+            <td><span style="background:#f0e8ff;color:#561d9c;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">{{ v.documento }}</span></td>
+            <td style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(v.total) }}</td>
+            <td style="color:#9c7fc0">{{ v.metodo_pago }}</td>
+            <td style="color:#9c7fc0;font-size:.8rem">{{ v.creado_en.strftime('%d/%m/%Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin ventas este mes.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── SUSCRIPCIONES ── -->
+<div id="rt-suscripciones" style="display:none">
+  <div class="stat-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon si-purple">🔄</div><div><div class="stat-value">{{ sus_activas|length }}</div><div class="stat-label">Suscripciones activas</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green">💵</div><div><div class="stat-value">${{ "%.2f"|format(ingreso_sus) }}</div><div class="stat-label">Ingreso mensual</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-amber">⏰</div><div><div class="stat-value">{{ sus_vencen_7|length }}</div><div class="stat-label">Vencen en 7 dias</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-pink">📅</div><div><div class="stat-value">{{ sus_vencen_30|length }}</div><div class="stat-label">Vencen en 30 dias</div></div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-trophy"></i> Planes mas populares</h5></div>
+      {% if planes_mas_vendidos %}
+      <table class="aruna-table">
+        <thead><tr><th>Plan</th><th>Suscriptores</th><th>Ingreso</th></tr></thead>
+        <tbody>
+          {% for plan, data in planes_mas_vendidos %}
+          <tr>
+            <td style="font-weight:600">{{ plan }}</td>
+            <td style="font-weight:700;color:#1a7a4a">{{ data.count }}</td>
+            <td>${{ "%.2f"|format(data.ingreso) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin suscripciones aun.</div>
+      {% endif %}
+    </div>
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-alarm"></i> Proximas a vencer (15 dias)</h5></div>
+      {% if sus_vencen_15 %}
+      <table class="aruna-table">
+        <thead><tr><th>Cliente</th><th>Plan</th><th>Vence</th></tr></thead>
+        <tbody>
+          {% for s in sus_vencen_15 %}
+          <tr>
+            <td style="font-weight:600">{{ s.cliente_nombre }}</td>
+            <td>{{ s.plan }}</td>
+            <td style="color:{% if (s.proximo_cobro - today).days <= 7 %}#b91c1c{% else %}#92400e{% endif %};font-weight:600">
+              {{ s.proximo_cobro.strftime('%d/%m/%Y') }}
+              <span style="font-size:.75rem">({{ (s.proximo_cobro - today).days }} dias)</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">✅ Sin vencimientos proximos.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-list-ul"></i> Todas las suscripciones activas</h5></div>
+    {% if sus_activas %}
     <table class="aruna-table">
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Categoría</th>
-          <th>Cantidad</th>
-          <th>Precio unit.</th>
-          <th>Valor total</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Cliente</th><th>Plan</th><th>Monto</th><th>Frecuencia</th><th>Proximo cobro</th></tr></thead>
       <tbody>
-        {% for p in productos|sort(attribute="cantidad") %}
+        {% for s in sus_activas %}
         <tr>
-          <td style="font-weight:600">{{ p.nombre }}</td>
-          <td>{{ p.categoria or "—" }}</td>
-          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% elif p.cantidad < 5 %}#92400e{% else %}#1a7a4a{% endif %}">{{ p.cantidad }}</td>
-          <td>${{ "%.2f"|format(p.precio) }}</td>
-          <td style="font-weight:600;color:#2d0060">${{ "%.2f"|format(p.precio * p.cantidad) }}</td>
-          <td>
-            {% if p.cantidad == 0 %}
-              <span class="badge badge-no">Sin stock</span>
-            {% elif p.cantidad <= (p.stock_minimo or 5) %}
-              <span style="background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">Bajo stock</span>
-            {% else %}
-              <span class="badge badge-ok">OK</span>
-            {% endif %}
+          <td style="font-weight:600">{{ s.cliente_nombre }}</td>
+          <td>{{ s.plan }}</td>
+          <td style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(s.monto) }}</td>
+          <td style="color:#9c7fc0">{{ s.frecuencia }}</td>
+          <td style="color:{% if s.proximo_cobro and (s.proximo_cobro - today).days <= 7 %}#b91c1c{% else %}#1a7a4a{% endif %}">
+            {{ s.proximo_cobro.strftime('%d/%m/%Y') if s.proximo_cobro else '—' }}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin suscripciones activas.</div>
+    {% endif %}
   </div>
 </div>
 
-<style>.si-green{background:#e8f8f0}</style>
+<!-- ── SERVICIOS ── -->
+<div id="rt-servicios" style="display:none">
+  <div class="stat-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon si-purple">📋</div><div><div class="stat-value">{{ srv_activos|length }}</div><div class="stat-label">Servicios activos</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-green">💵</div><div><div class="stat-value">${{ "%.2f"|format(ingreso_srv) }}</div><div class="stat-label">Ingreso por servicios</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-pink">❌</div><div><div class="stat-value">{{ srv_vencidos|length }}</div><div class="stat-label">Servicios vencidos</div></div></div>
+    <div class="stat-card"><div class="stat-icon si-amber">📊</div><div><div class="stat-value">${{ "%.2f"|format(ingreso_sus + ingreso_srv) }}</div><div class="stat-label">Ingreso recurrente total</div></div></div>
+  </div>
 
-<!-- Modal enviar por email -->
-<div id="modalEmail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
-  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden">
-    <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:.95rem;font-weight:700;color:#2d0060"><i class="bi bi-envelope"></i> Enviar reporte por email</span>
-      <button onclick="document.getElementById('modalEmail').style.display='none'"
-        style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0">×</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-check-circle"></i> Servicios activos</h5></div>
+      {% if srv_activos %}
+      <table class="aruna-table">
+        <thead><tr><th>Cliente</th><th>Servicio</th><th>Monto</th><th>Vence</th></tr></thead>
+        <tbody>
+          {% for s in srv_activos %}
+          <tr>
+            <td style="font-weight:600">{{ s.cliente_nombre }}</td>
+            <td>{{ s.descripcion }}</td>
+            <td style="font-weight:700;color:#1a7a4a">${{ "%.2f"|format(s.monto) }}</td>
+            <td style="color:#9c7fc0;font-size:.8rem">{{ s.fecha_fin.strftime('%d/%m/%Y') if s.fecha_fin else 'Indefinido' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin servicios activos.</div>
+      {% endif %}
     </div>
-    <div style="padding:1.5rem">
-      <form method="POST" action="{{ url_for('enviar_reporte') }}">
-        <div class="fi-group" style="margin-bottom:1rem">
-          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Destinatario</label>
-          <input type="email" name="email_destino" placeholder="correo@empresa.com" required
-            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%">
-        </div>
-        <div class="fi-group" style="margin-bottom:1.5rem">
-          <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Mensaje (opcional)</label>
-          <textarea name="mensaje" placeholder="Adjunto el reporte de inventario..." rows="3"
-            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
-        </div>
-        <button type="submit" style="width:100%;padding:.75rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer">
-          <i class="bi bi-send"></i> Enviar reporte
-        </button>
-      </form>
+    <div class="panel-card">
+      <div class="panel-card-header"><h5><i class="bi bi-x-circle"></i> Servicios vencidos</h5></div>
+      {% if srv_vencidos %}
+      <table class="aruna-table">
+        <thead><tr><th>Cliente</th><th>Servicio</th><th>Vencio</th></tr></thead>
+        <tbody>
+          {% for s in srv_vencidos %}
+          <tr>
+            <td style="font-weight:600">{{ s.cliente_nombre }}</td>
+            <td>{{ s.descripcion }}</td>
+            <td style="color:#b91c1c;font-size:.8rem">{{ s.fecha_fin.strftime('%d/%m/%Y') if s.fecha_fin else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin servicios vencidos.</div>
+      {% endif %}
     </div>
   </div>
 </div>
 
+<style>
+.si-green{background:#e8f8f0}
+</style>
+
+<script>
+function showRTab(id, btn) {
+  ['rt-inventario','rt-ventas','rt-suscripciones','rt-servicios'].forEach(t => {
+    document.getElementById(t).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  ['btn-rt-inventario','btn-rt-ventas','btn-rt-suscripciones','btn-rt-servicios'].forEach(b => {
+    const el = document.getElementById(b);
+    el.style.background = '#f0e8ff';
+    el.style.color = '#8b3fe3';
+    el.style.boxShadow = 'none';
+  });
+  btn.style.background = 'linear-gradient(135deg,#561d9c,#8b3fe3)';
+  btn.style.color = '#fff';
+  btn.style.boxShadow = '0 4px 12px rgba(86,29,156,.25)';
+}
+</script>
 {% endblock %}

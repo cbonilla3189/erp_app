@@ -1,0 +1,42 @@
+{% extends "panel_base.html" %}
+{% block title %}Clientes — aruna{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-people"></i> Clientes</div>
+  <div style="display:flex;gap:.5rem">
+    <a href="{{ url_for('ventas') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+    <a href="{{ url_for('nuevo_cliente') }}" style="display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border-radius:10px;font-size:.85rem;font-weight:700;text-decoration:none">
+      <i class="bi bi-plus-lg"></i> Nuevo cliente
+    </a>
+  </div>
+</div>
+<div class="panel-card">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-people"></i> Listado de clientes</h5>
+    <span class="count">{{ clientes|length }} registros</span>
+  </div>
+  {% if clientes %}
+  <table class="aruna-table">
+    <thead><tr><th>Nombre</th><th>RUC</th><th>Correo</th><th>Telefono</th><th>Fecha</th></tr></thead>
+    <tbody>
+      {% for c in clientes %}
+      <tr>
+        <td style="font-weight:600">{{ c.nombre }} {{ c.apellido or '' }}</td>
+        <td style="font-family:monospace">{{ c.ruc or '—' }}{% if c.dv %}-{{ c.dv }}{% endif %}</td>
+        <td>{{ c.correo or '—' }}</td>
+        <td>{{ c.telefono or '—' }}</td>
+        <td style="color:#9c7fc0;font-size:.8rem">{{ c.creado_en.strftime('%d/%m/%Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:2.5rem;text-align:center;color:#9c7fc0">
+    <div style="font-size:2rem;margin-bottom:.5rem">👥</div>
+    <div style="font-weight:600;color:#2d0060">Sin clientes registrados</div>
+    <a href="{{ url_for('nuevo_cliente') }}" style="color:#8b3fe3;font-weight:600;text-decoration:none;font-size:.85rem">Agregar cliente →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
