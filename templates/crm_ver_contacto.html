@@ -1,0 +1,138 @@
+{% extends "panel_base.html" %}
+{% block title %}{{ contacto.nombre }} — CRM{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-person"></i> {{ contacto.nombre }} {{ contacto.apellido or '' }}</div>
+  <a href="{{ url_for('crm') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> CRM</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-info-circle"></i> Informacion</h5></div>
+    <div style="padding:1.25rem">
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+        <tr style="border-bottom:1px solid #f0eaf7"><td style="padding:.5rem 0;color:#9c7fc0;width:40%">Empresa</td><td style="padding:.5rem 0;font-weight:600">{{ contacto.empresa_contacto or '—' }}</td></tr>
+        <tr style="border-bottom:1px solid #f0eaf7"><td style="padding:.5rem 0;color:#9c7fc0">Cargo</td><td style="padding:.5rem 0">{{ contacto.cargo or '—' }}</td></tr>
+        <tr style="border-bottom:1px solid #f0eaf7"><td style="padding:.5rem 0;color:#9c7fc0">Correo</td><td style="padding:.5rem 0">{{ contacto.correo or '—' }}</td></tr>
+        <tr style="border-bottom:1px solid #f0eaf7"><td style="padding:.5rem 0;color:#9c7fc0">Telefono</td><td style="padding:.5rem 0">{{ contacto.telefono or '—' }}</td></tr>
+        <tr><td style="padding:.5rem 0;color:#9c7fc0">Origen</td><td style="padding:.5rem 0">{{ contacto.origen or '—' }}</td></tr>
+      </table>
+      {% if contacto.notas %}
+      <div style="margin-top:.75rem;padding:.75rem;background:#f8f5ff;border-radius:8px;font-size:.85rem;color:#4a2080">{{ contacto.notas }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-check-square"></i> Nueva tarea</h5></div>
+    <div style="padding:1.25rem">
+      <form method="POST" action="{{ url_for('crm_nueva_tarea') }}">
+        <input type="hidden" name="contacto_id" value="{{ contacto.id }}">
+        <div class="fi-group" style="margin-bottom:.75rem">
+          <label>Descripcion *</label>
+          <input type="text" name="descripcion" placeholder="Ej. Llamar para seguimiento" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+          <div class="fi-group">
+            <label>Fecha limite</label>
+            <input type="date" name="fecha_limite">
+          </div>
+          <div class="fi-group">
+            <label>Prioridad</label>
+            <select name="prioridad" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+              <option value="baja">Baja</option>
+              <option value="media" selected>Media</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+        </div>
+        <div class="fi-group" style="margin-bottom:.75rem">
+          <label>Asignar a</label>
+          <select name="asignado_a" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+            {% for u in usuarios_empresa %}
+            <option value="{{ u.id }}">{{ u.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" style="width:100%;padding:.65rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Crear tarea
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-clock-history"></i> Historial</h5>
+    </div>
+    <div style="padding:1.25rem">
+      <form method="POST" action="{{ url_for('crm_nueva_interaccion', contacto_id=contacto.id) }}" style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #f0eaf7">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+          <div class="fi-group">
+            <label>Tipo</label>
+            <select name="tipo" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+              <option value="llamada">📞 Llamada</option>
+              <option value="email">📧 Email</option>
+              <option value="reunion">🤝 Reunion</option>
+              <option value="nota">📝 Nota</option>
+            </select>
+          </div>
+        </div>
+        <div class="fi-group" style="margin-bottom:.75rem">
+          <label>Descripcion</label>
+          <textarea name="descripcion" rows="2"
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+        </div>
+        <div class="fi-group" style="margin-bottom:.75rem">
+          <label>Resultado</label>
+          <input type="text" name="resultado" placeholder="Ej. Interesado, volver a llamar">
+        </div>
+        <button type="submit" style="width:100%;padding:.6rem;background:#f0e8ff;color:#561d9c;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Registrar
+        </button>
+      </form>
+      {% for i in contacto.interacciones|sort(attribute='fecha', reverse=True) %}
+      <div style="padding:.75rem;background:#f8f5ff;border-radius:10px;margin-bottom:.5rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:.25rem">
+          <span style="font-size:.78rem;font-weight:700;color:#561d9c">
+            {% if i.tipo=='llamada' %}📞{% elif i.tipo=='email' %}📧{% elif i.tipo=='reunion' %}🤝{% else %}📝{% endif %}
+            {{ i.tipo|title }}
+          </span>
+          <span style="font-size:.72rem;color:#9c7fc0">{{ i.fecha.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+        {% if i.descripcion %}<div style="font-size:.82rem;color:#1a0035">{{ i.descripcion }}</div>{% endif %}
+        {% if i.resultado %}<div style="font-size:.78rem;color:#1a7a4a;margin-top:.2rem">✓ {{ i.resultado }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-graph-up"></i> Oportunidades</h5></div>
+    {% if contacto.oportunidades %}
+    <table class="aruna-table">
+      <thead><tr><th>Titulo</th><th>Valor</th><th>Etapa</th></tr></thead>
+      <tbody>
+        {% for op in contacto.oportunidades %}
+        <tr>
+          <td style="font-weight:600">{{ op.titulo }}</td>
+          <td style="color:#1a7a4a;font-weight:700">${{ "%.2f"|format(op.valor) }}</td>
+          <td><span style="background:#f0e8ff;color:#561d9c;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">{{ op.etapa }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:#9c7fc0;font-size:.85rem">Sin oportunidades.</div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+{% endblock %}

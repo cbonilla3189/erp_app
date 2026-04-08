@@ -78,7 +78,6 @@ class Producto(db.Model):
     codigo_barras = db.Column(db.String(100))
     inventario_id = db.Column(db.Integer, db.ForeignKey("inventarios.id"))
     categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
-    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
 
 
 
@@ -228,6 +227,114 @@ class ServicioFijo(db.Model):
     creado_por     = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
     creado_en      = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
+
+class CrmContacto(db.Model):
+    __tablename__ = "crm_contactos"
+    id               = db.Column(db.Integer, primary_key=True)
+    empresa_id       = db.Column(db.String(200))
+    nombre           = db.Column(db.String(100), nullable=False)
+    apellido         = db.Column(db.String(100))
+    empresa_contacto = db.Column(db.String(200))
+    cargo            = db.Column(db.String(100))
+    correo           = db.Column(db.String(150))
+    telefono         = db.Column(db.String(30))
+    origen           = db.Column(db.String(50))
+    estado           = db.Column(db.String(20), default="activo")
+    notas            = db.Column(db.Text)
+    creado_por       = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    creado_en        = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    oportunidades    = db.relationship("CrmOportunidad", backref="contacto", lazy=True)
+    interacciones    = db.relationship("CrmInteraccion", backref="contacto", lazy=True, cascade="all, delete-orphan")
+    tareas           = db.relationship("CrmTarea", backref="contacto", lazy=True)
+
+
+class CrmOportunidad(db.Model):
+    __tablename__ = "crm_oportunidades"
+    id             = db.Column(db.Integer, primary_key=True)
+    empresa_id     = db.Column(db.String(200))
+    contacto_id    = db.Column(db.Integer, db.ForeignKey("crm_contactos.id"))
+    titulo         = db.Column(db.String(200), nullable=False)
+    valor          = db.Column(db.Numeric(12,2), default=0)
+    etapa          = db.Column(db.String(30), default="prospecto")
+    responsable_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    fecha_cierre   = db.Column(db.Date)
+    probabilidad   = db.Column(db.Integer, default=0)
+    notas          = db.Column(db.Text)
+    flujo_id       = db.Column(db.Integer, db.ForeignKey("flujos.id"))
+    etapa_flujo_id = db.Column(db.Integer, db.ForeignKey("flujo_etapas.id"))
+    creado_en      = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    interacciones  = db.relationship("CrmInteraccion", backref="oportunidad", lazy=True)
+    tareas         = db.relationship("CrmTarea", backref="oportunidad", lazy=True)
+
+
+class CrmInteraccion(db.Model):
+    __tablename__ = "crm_interacciones"
+    id              = db.Column(db.Integer, primary_key=True)
+    contacto_id     = db.Column(db.Integer, db.ForeignKey("crm_contactos.id"))
+    oportunidad_id  = db.Column(db.Integer, db.ForeignKey("crm_oportunidades.id"))
+    tipo            = db.Column(db.String(30), nullable=False)
+    descripcion     = db.Column(db.Text)
+    resultado       = db.Column(db.Text)
+    fecha           = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    creado_por      = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+
+
+class CrmTarea(db.Model):
+    __tablename__ = "crm_tareas"
+    id              = db.Column(db.Integer, primary_key=True)
+    empresa_id      = db.Column(db.String(200))
+    contacto_id     = db.Column(db.Integer, db.ForeignKey("crm_contactos.id"))
+    oportunidad_id  = db.Column(db.Integer, db.ForeignKey("crm_oportunidades.id"))
+    descripcion     = db.Column(db.String(300), nullable=False)
+    asignado_a      = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    fecha_limite    = db.Column(db.Date)
+    estado          = db.Column(db.String(20), default="pendiente")
+    prioridad       = db.Column(db.String(20), default="media")
+    creado_por      = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    creado_en       = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+
+class Flujo(db.Model):
+    __tablename__ = "flujos"
+    id          = db.Column(db.Integer, primary_key=True)
+    empresa     = db.Column(db.String(200), nullable=False)
+    nombre      = db.Column(db.String(100), nullable=False)
+    modulo      = db.Column(db.String(30), nullable=False)
+    descripcion = db.Column(db.Text)
+    activo      = db.Column(db.Boolean, default=True)
+    creado_en   = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    etapas      = db.relationship("FlujoEtapa", backref="flujo", lazy=True,
+                    order_by="FlujoEtapa.orden", cascade="all, delete-orphan")
+    reglas      = db.relationship("FlujoRegla", backref="flujo", lazy=True,
+                    cascade="all, delete-orphan")
+
+
+class FlujoEtapa(db.Model):
+    __tablename__ = "flujo_etapas"
+    id             = db.Column(db.Integer, primary_key=True)
+    flujo_id       = db.Column(db.Integer, db.ForeignKey("flujos.id"))
+    nombre         = db.Column(db.String(100), nullable=False)
+    color          = db.Column(db.String(7), default="#561d9c")
+    orden          = db.Column(db.Integer, default=0)
+    responsable_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
+    es_final       = db.Column(db.Boolean, default=False)
+    es_perdido     = db.Column(db.Boolean, default=False)
+    reglas         = db.relationship("FlujoRegla", backref="etapa", lazy=True,
+                        cascade="all, delete-orphan")
+
+
+class FlujoRegla(db.Model):
+    __tablename__ = "flujo_reglas"
+    id            = db.Column(db.Integer, primary_key=True)
+    flujo_id      = db.Column(db.Integer, db.ForeignKey("flujos.id"))
+    etapa_id      = db.Column(db.Integer, db.ForeignKey("flujo_etapas.id"))
+    trigger       = db.Column(db.String(50), nullable=False)
+    accion        = db.Column(db.String(50), nullable=False)
+    destinatario  = db.Column(db.String(30), default="responsable")
+    mensaje       = db.Column(db.Text)
+    activo        = db.Column(db.Boolean, default=True)
+
+
 class CampoPersonalizado(db.Model):
     __tablename__ = "campos_personalizados"
     id         = db.Column(db.Integer, primary_key=True)
@@ -237,7 +344,6 @@ class CampoPersonalizado(db.Model):
     opciones   = db.Column(db.Text)
     creado_en     = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     inventario_id = db.Column(db.Integer, db.ForeignKey("inventarios.id"))
-    categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
     categoria_id  = db.Column(db.Integer, db.ForeignKey("categorias.id"))
     valores    = db.relationship("ValorCampo", backref="campo", lazy=True, cascade="all, delete-orphan")
 
@@ -1692,34 +1798,314 @@ def editar_usuario_empresa(user_id):
     return render_template("editar_usuario_empresa.html", user_data=user)
 
 
+
+# -----------------------------
+# CRM
+# -----------------------------
+@app.route("/crm")
+def crm():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    import datetime as dt
+    today = dt.date.today()
+    contactos = CrmContacto.query.filter_by(empresa_id=empresa).order_by(CrmContacto.creado_en.desc()).all()
+    oportunidades = CrmOportunidad.query.filter_by(empresa_id=empresa).all()
+    tareas = CrmTarea.query.filter_by(empresa_id=empresa).order_by(CrmTarea.fecha_limite).all()
+    tareas_pendientes = [t for t in tareas if t.estado == "pendiente"]
+    tareas_vencidas = [t for t in tareas_pendientes if t.fecha_limite and t.fecha_limite < today]
+    pipeline = {
+        "prospecto":   [o for o in oportunidades if o.etapa == "prospecto"],
+        "contactado":  [o for o in oportunidades if o.etapa == "contactado"],
+        "propuesta":   [o for o in oportunidades if o.etapa == "propuesta"],
+        "negociacion": [o for o in oportunidades if o.etapa == "negociacion"],
+        "cerrado":     [o for o in oportunidades if o.etapa == "cerrado"],
+        "perdido":     [o for o in oportunidades if o.etapa == "perdido"],
+    }
+    valor_pipeline = sum(float(o.valor) for o in oportunidades if o.etapa not in ["cerrado","perdido"])
+    valor_cerrado  = sum(float(o.valor) for o in oportunidades if o.etapa == "cerrado")
+    return render_template("crm.html",
+        contactos=contactos, oportunidades=oportunidades,
+        tareas=tareas, tareas_pendientes=tareas_pendientes,
+        tareas_vencidas=tareas_vencidas, pipeline=pipeline,
+        valor_pipeline=valor_pipeline, valor_cerrado=valor_cerrado,
+        today=today)
+
+
+@app.route("/crm/contactos/nuevo", methods=["GET","POST"])
+def crm_nuevo_contacto():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    if request.method == "POST":
+        c = CrmContacto(
+            empresa_id=user.empresa or "",
+            nombre=request.form.get("nombre","").strip().title(),
+            apellido=request.form.get("apellido","").strip().title(),
+            empresa_contacto=request.form.get("empresa_contacto","").strip().title(),
+            cargo=request.form.get("cargo","").strip(),
+            correo=request.form.get("correo","").strip(),
+            telefono=request.form.get("telefono","").strip(),
+            origen=request.form.get("origen",""),
+            notas=request.form.get("notas","").strip(),
+            creado_por=user.id
+        )
+        db.session.add(c)
+        db.session.commit()
+        flash(f"Contacto {c.nombre} creado.", "success")
+        return redirect(url_for("crm"))
+    return render_template("crm_nuevo_contacto.html")
+
+
+@app.route("/crm/contactos/<int:contacto_id>")
+def crm_ver_contacto(contacto_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    contacto = CrmContacto.query.get(contacto_id)
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    usuarios_empresa = Usuario.query.filter_by(empresa=empresa).all()
+    return render_template("crm_ver_contacto.html", contacto=contacto,
+        usuarios_empresa=usuarios_empresa)
+
+
+@app.route("/crm/contactos/<int:contacto_id>/interaccion", methods=["POST"])
+def crm_nueva_interaccion(contacto_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    i = CrmInteraccion(
+        contacto_id=contacto_id,
+        tipo=request.form.get("tipo","nota"),
+        descripcion=request.form.get("descripcion","").strip(),
+        resultado=request.form.get("resultado","").strip(),
+        creado_por=user.id
+    )
+    db.session.add(i)
+    db.session.commit()
+    flash("Interaccion registrada.", "success")
+    return redirect(url_for("crm_ver_contacto", contacto_id=contacto_id))
+
+
+@app.route("/crm/oportunidades/nueva", methods=["GET","POST"])
+def crm_nueva_oportunidad():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    contactos = CrmContacto.query.filter_by(empresa_id=empresa).all()
+    usuarios_empresa = Usuario.query.filter_by(empresa=empresa).all()
+    if request.method == "POST":
+        import datetime as dt
+        o = CrmOportunidad(
+            empresa_id=empresa,
+            contacto_id=int(request.form.get("contacto_id")) if request.form.get("contacto_id") else None,
+            titulo=request.form.get("titulo","").strip(),
+            valor=float(request.form.get("valor",0) or 0),
+            etapa=request.form.get("etapa","prospecto"),
+            responsable_id=int(request.form.get("responsable_id")) if request.form.get("responsable_id") else user.id,
+            fecha_cierre=dt.date.fromisoformat(request.form.get("fecha_cierre")) if request.form.get("fecha_cierre") else None,
+            probabilidad=int(request.form.get("probabilidad",0) or 0),
+            notas=request.form.get("notas","").strip()
+        )
+        db.session.add(o)
+        db.session.commit()
+        flash("Oportunidad creada.", "success")
+        return redirect(url_for("crm"))
+    return render_template("crm_nueva_oportunidad.html",
+        contactos=contactos, usuarios_empresa=usuarios_empresa)
+
+
+@app.route("/crm/oportunidades/<int:op_id>/etapa", methods=["POST"])
+def crm_cambiar_etapa(op_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    op = CrmOportunidad.query.get(op_id)
+    if op:
+        op.etapa = request.form.get("etapa", op.etapa)
+        db.session.commit()
+    return redirect(url_for("crm"))
+
+
+@app.route("/crm/tareas/nueva", methods=["POST"])
+def crm_nueva_tarea():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    import datetime as dt
+    t = CrmTarea(
+        empresa_id=user.empresa or "",
+        contacto_id=int(request.form.get("contacto_id")) if request.form.get("contacto_id") else None,
+        oportunidad_id=int(request.form.get("oportunidad_id")) if request.form.get("oportunidad_id") else None,
+        descripcion=request.form.get("descripcion","").strip(),
+        asignado_a=int(request.form.get("asignado_a")) if request.form.get("asignado_a") else user.id,
+        fecha_limite=dt.date.fromisoformat(request.form.get("fecha_limite")) if request.form.get("fecha_limite") else None,
+        prioridad=request.form.get("prioridad","media"),
+        creado_por=user.id
+    )
+    db.session.add(t)
+    db.session.commit()
+    flash("Tarea creada.", "success")
+    return redirect(request.referrer or url_for("crm"))
+
+
+@app.route("/crm/tareas/<int:tarea_id>/completar", methods=["POST"])
+def crm_completar_tarea(tarea_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    tarea = CrmTarea.query.get(tarea_id)
+    if tarea:
+        tarea.estado = "completada"
+        db.session.commit()
+        flash("Tarea completada.", "success")
+    return redirect(request.referrer or url_for("crm"))
+
+
+# -----------------------------
+# Flujos / Workflow Engine
+# -----------------------------
+@app.route("/flujos")
+def lista_flujos():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    flujos = Flujo.query.filter_by(empresa=empresa).order_by(Flujo.creado_en.desc()).all()
+    return render_template("flujos.html", flujos=flujos)
+
+
+@app.route("/flujos/nuevo", methods=["GET","POST"])
+def nuevo_flujo():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    usuarios_empresa = Usuario.query.filter_by(empresa=empresa).all()
+    if request.method == "POST":
+        nombre      = request.form.get("nombre","").strip()
+        modulo      = request.form.get("modulo","crm")
+        descripcion = request.form.get("descripcion","").strip()
+        flujo = Flujo(empresa=empresa, nombre=nombre, modulo=modulo, descripcion=descripcion)
+        db.session.add(flujo)
+        db.session.flush()
+
+        nombres_etapa   = request.form.getlist("etapa_nombre[]")
+        colores_etapa   = request.form.getlist("etapa_color[]")
+        resp_etapa      = request.form.getlist("etapa_responsable[]")
+        final_etapa     = request.form.getlist("etapa_final[]")
+        perdido_etapa   = request.form.getlist("etapa_perdido[]")
+
+        for i, nombre_e in enumerate(nombres_etapa):
+            if nombre_e.strip():
+                etapa = FlujoEtapa(
+                    flujo_id=flujo.id,
+                    nombre=nombre_e.strip(),
+                    color=colores_etapa[i] if i < len(colores_etapa) else "#561d9c",
+                    orden=i,
+                    responsable_id=int(resp_etapa[i]) if i < len(resp_etapa) and resp_etapa[i] else None,
+                    es_final=str(i) in final_etapa,
+                    es_perdido=str(i) in perdido_etapa
+                )
+                db.session.add(etapa)
+
+        db.session.commit()
+        flash(f"Flujo '{nombre}' creado.", "success")
+        return redirect(url_for("lista_flujos"))
+    return render_template("nuevo_flujo.html", usuarios_empresa=usuarios_empresa)
+
+
+@app.route("/flujos/<int:flujo_id>")
+def ver_flujo(flujo_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    flujo = Flujo.query.get(flujo_id)
+    user = Usuario.query.get(session["user_id"])
+    empresa = user.empresa or ""
+    usuarios_empresa = Usuario.query.filter_by(empresa=empresa).all()
+    return render_template("ver_flujo.html", flujo=flujo, usuarios_empresa=usuarios_empresa)
+
+
+@app.route("/flujos/<int:flujo_id>/regla", methods=["POST"])
+def nueva_regla(flujo_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    etapa_id    = request.form.get("etapa_id")
+    trigger     = request.form.get("trigger","")
+    accion      = request.form.get("accion","")
+    destinatario= request.form.get("destinatario","responsable")
+    mensaje     = request.form.get("mensaje","").strip()
+    regla = FlujoRegla(
+        flujo_id=flujo_id,
+        etapa_id=int(etapa_id) if etapa_id else None,
+        trigger=trigger, accion=accion,
+        destinatario=destinatario, mensaje=mensaje
+    )
+    db.session.add(regla)
+    db.session.commit()
+    flash("Regla agregada.", "success")
+    return redirect(url_for("ver_flujo", flujo_id=flujo_id))
+
+
+@app.route("/flujos/<int:flujo_id>/toggle")
+def toggle_flujo(flujo_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    flujo = Flujo.query.get(flujo_id)
+    if flujo:
+        flujo.activo = not flujo.activo
+        db.session.commit()
+        flash(f"Flujo {'activado' if flujo.activo else 'desactivado'}.", "success")
+    return redirect(url_for("lista_flujos"))
+
+
+def ejecutar_reglas(flujo_id, etapa_id, trigger, oportunidad=None, tarea=None):
+    reglas = FlujoRegla.query.filter_by(
+        flujo_id=flujo_id, etapa_id=etapa_id,
+        trigger=trigger, activo=True
+    ).all()
+    for regla in reglas:
+        try:
+            destinatario_email = None
+            if regla.destinatario == "responsable" and oportunidad and oportunidad.responsable_id:
+                u = Usuario.query.get(oportunidad.responsable_id)
+                if u: destinatario_email = u.correo
+            elif regla.destinatario == "admin":
+                etapa = FlujoEtapa.query.get(etapa_id)
+                if etapa and etapa.responsable_id:
+                    u = Usuario.query.get(etapa.responsable_id)
+                    if u: destinatario_email = u.correo
+            elif regla.destinatario == "tarea_asignado" and tarea and tarea.asignado_a:
+                u = Usuario.query.get(tarea.asignado_a)
+                if u: destinatario_email = u.correo
+
+            if destinatario_email and regla.accion == "enviar_email":
+                titulo = oportunidad.titulo if oportunidad else (tarea.descripcion if tarea else "")
+                etapa_obj = FlujoEtapa.query.get(etapa_id)
+                etapa_nombre = etapa_obj.nombre if etapa_obj else ""
+                msg = Message(
+                    subject=f"aruna — {regla.mensaje or 'Notificacion de flujo'}",
+                    sender=app.config["MAIL_USERNAME"],
+                    recipients=[destinatario_email]
+                )
+                msg.body = (
+                    f"{regla.mensaje or 'Tienes una actualizacion en aruna.'}\n\n"
+                    f"Elemento: {titulo}\n"
+                    f"Etapa: {etapa_nombre}\n\n"
+                    f"Ingresa a aruna para ver los detalles."
+                )
+                mail.send(msg)
+        except Exception as e:
+            print(f"Error ejecutando regla {regla.id}: {e}")
+
+
+# -----------------------------
+# Flujos / Workflow Engine
+# -----------------------------
+
+
 # -----------------------------
 # Run
 # -----------------------------
-
-@app.route("/verificar/<int:user_id>", methods=["GET", "POST"])
-def verify_code(user_id):
-    user = Usuario.query.get(user_id)
-    if not user:
-        flash("Usuario no encontrado.", "danger")
-        return redirect(url_for("login"))
-    if request.method == "POST":
-        codigo = request.form.get("codigo", "").strip()
-        tv = TokenVerificacion.query.filter_by(user_id=user_id, token=codigo).first()
-        if not tv:
-            flash("Código incorrecto. Intenta de nuevo.", "danger")
-            return render_template("verify.html", user_id=user_id, correo=user.correo)
-        if datetime.datetime.now() > tv.fecha_expiracion:
-            db.session.delete(tv)
-            db.session.commit()
-            flash("El código expiró. Regístrate de nuevo.", "warning")
-            return redirect(url_for("register"))
-        user.verificado = 1
-        db.session.delete(tv)
-        db.session.commit()
-        return render_template("verify.html", mensaje="Cuenta verificada. Ya puedes iniciar sesión.")
-    return render_template("verify.html", user_id=user_id, correo=user.correo)
-
 if __name__ == "__main__":
-    with app.app_context():
-        init_db()
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=5000)

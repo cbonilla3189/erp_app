@@ -1,0 +1,104 @@
+{% extends "panel_base.html" %}
+{% block title %}{{ flujo.nombre }} — aruna{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <div class="section-title" style="margin-bottom:0"><i class="bi bi-diagram-3"></i> {{ flujo.nombre }}</div>
+  <a href="{{ url_for('lista_flujos') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Flujos</a>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for category, message in messages %}
+    <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
+      {% if category=='success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
+      {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">{{ message }}</div>
+  {% endfor %}{% endif %}
+{% endwith %}
+<div class="panel-card" style="margin-bottom:1.25rem">
+  <div class="panel-card-header">
+    <h5><i class="bi bi-list-ol"></i> Etapas</h5>
+    <span style="background:{% if flujo.modulo=='crm' %}#f0e8ff{% elif flujo.modulo=='ventas' %}#fff8e8{% else %}#e8f8f0{% endif %};
+      color:{% if flujo.modulo=='crm' %}#561d9c{% elif flujo.modulo=='ventas' %}#92400e{% else %}#1a7a4a{% endif %};
+      padding:.2rem .65rem;border-radius:20px;font-size:.75rem;font-weight:700">{{ flujo.modulo|upper }}</span>
+  </div>
+  <div style="padding:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+    {% for etapa in flujo.etapas %}
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+      <div style="background:{{ etapa.color }}20;border:2px solid {{ etapa.color }};border-radius:12px;padding:.6rem 1.25rem;text-align:center;min-width:120px">
+        <div style="font-size:.85rem;font-weight:700;color:{{ etapa.color }}">{{ etapa.nombre }}</div>
+        {% if etapa.responsable_id %}
+          {% for u in usuarios_empresa %}{% if u.id == etapa.responsable_id %}
+          <div style="font-size:.7rem;color:#9c7fc0;margin-top:.2rem">👤 {{ u.nombre }}</div>
+          {% endif %}{% endfor %}
+        {% endif %}
+        {% if etapa.es_final %}<div style="font-size:.65rem;color:#1a7a4a;font-weight:700">✓ FINAL</div>{% endif %}
+        {% if etapa.es_perdido %}<div style="font-size:.65rem;color:#b91c1c;font-weight:700">✗ PERDIDO</div>{% endif %}
+      </div>
+      <div style="font-size:.7rem;color:#9c7fc0">{{ etapa.reglas|length }} reglas</div>
+    </div>
+    {% if not loop.last %}<div style="color:#9c7fc0;font-size:1.2rem">→</div>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+<div class="panel-card">
+  <div class="panel-card-header"><h5><i class="bi bi-lightning-charge"></i> Reglas de automatizacion</h5></div>
+  <div style="padding:1.25rem">
+    <form method="POST" action="{{ url_for('nueva_regla', flujo_id=flujo.id) }}"
+      style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;margin-bottom:1.25rem;align-items:end">
+      <div class="fi-group">
+        <label>Etapa</label>
+        <select name="etapa_id" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="">Cualquier etapa</option>
+          {% for etapa in flujo.etapas %}<option value="{{ etapa.id }}">{{ etapa.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="fi-group">
+        <label>Cuando (trigger)</label>
+        <select name="trigger" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="etapa_cambia">Etapa cambia</option>
+          <option value="tarea_asignada">Tarea asignada</option>
+          <option value="tarea_completada">Tarea completada</option>
+          <option value="oportunidad_creada">Oportunidad creada</option>
+        </select>
+      </div>
+      <div class="fi-group">
+        <label>Accion</label>
+        <select name="accion" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="enviar_email">Enviar email</option>
+          <option value="notificar_admin">Notificar admin</option>
+        </select>
+      </div>
+      <div class="fi-group">
+        <label>Destinatario</label>
+        <select name="destinatario" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="responsable">Responsable etapa</option>
+          <option value="tarea_asignado">Asignado a tarea</option>
+          <option value="admin">Admin empresa</option>
+        </select>
+      </div>
+      <button type="submit" style="padding:.6rem 1rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;height:40px">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+    </form>
+    {% if flujo.reglas %}
+    <table class="aruna-table">
+      <thead><tr><th>Etapa</th><th>Trigger</th><th>Accion</th><th>Destinatario</th></tr></thead>
+      <tbody>
+        {% for r in flujo.reglas %}
+        <tr>
+          <td>{% if r.etapa %}{{ r.etapa.nombre }}{% else %}Cualquiera{% endif %}</td>
+          <td><span style="background:#f0e8ff;color:#561d9c;padding:.18rem .55rem;border-radius:20px;font-size:.73rem;font-weight:600">{{ r.trigger }}</span></td>
+          <td>{{ r.accion }}</td>
+          <td style="color:#9c7fc0">{{ r.destinatario }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;color:#9c7fc0;padding:1.5rem;font-size:.85rem">Sin reglas aun.</div>
+    {% endif %}
+  </div>
+</div>
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.75rem;font-weight:700;color:#3d1a6e}
+</style>
+{% endblock %}

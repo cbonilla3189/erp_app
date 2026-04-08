@@ -1,0 +1,98 @@
+{% extends "panel_base.html" %}
+{% block title %}Nuevo flujo — aruna{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-diagram-3"></i> Nuevo flujo</div>
+    <a href="{{ url_for('lista_flujos') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+  <form method="POST">
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header"><h5><i class="bi bi-info-circle"></i> Datos del flujo</h5></div>
+    <div style="padding:1.5rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+      <div class="fi-group" style="grid-column:1/-1">
+        <label>Nombre *</label>
+        <input type="text" name="nombre" placeholder="Ej. Pipeline de ventas" required>
+      </div>
+      <div class="fi-group">
+        <label>Modulo</label>
+        <select name="modulo" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="crm">CRM</option>
+          <option value="ventas">Ventas</option>
+          <option value="inventario">Inventario</option>
+        </select>
+      </div>
+      <div class="fi-group" style="grid-column:2/-1">
+        <label>Descripcion</label>
+        <input type="text" name="descripcion" placeholder="Describe el proposito del flujo">
+      </div>
+    </div>
+  </div>
+  <div class="panel-card" style="margin-bottom:1.25rem">
+    <div class="panel-card-header">
+      <h5><i class="bi bi-list-ol"></i> Etapas del pipeline</h5>
+      <button type="button" onclick="agregarEtapa()" class="btn-act btn-edit"><i class="bi bi-plus-lg"></i> Agregar etapa</button>
+    </div>
+    <div style="padding:1.25rem" id="listaEtapas">
+      <div class="etapa-row" style="display:grid;grid-template-columns:2fr 80px 1fr 80px 80px auto;gap:.75rem;margin-bottom:.75rem;align-items:center">
+        <div class="fi-group"><label>Nombre</label><input type="text" name="etapa_nombre[]" placeholder="Ej. Prospecto" required></div>
+        <div class="fi-group"><label>Color</label><input type="color" name="etapa_color[]" value="#561d9c" style="padding:.2rem;border:1.5px solid #e2d6f3;border-radius:10px;height:40px;width:100%;cursor:pointer"></div>
+        <div class="fi-group">
+          <label>Responsable</label>
+          <select name="etapa_responsable[]" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+            <option value="">Sin asignar</option>
+            {% for u in usuarios_empresa %}<option value="{{ u.id }}">{{ u.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="fi-group" style="text-align:center"><label style="font-size:.7rem">Final</label>
+          <input type="checkbox" name="etapa_final[]" value="0" style="width:20px;height:20px;accent-color:#1a7a4a;display:block;margin:8px auto 0"></div>
+        <div class="fi-group" style="text-align:center"><label style="font-size:.7rem">Perdido</label>
+          <input type="checkbox" name="etapa_perdido[]" value="0" style="width:20px;height:20px;accent-color:#b91c1c;display:block;margin:8px auto 0"></div>
+        <div style="padding-top:1.5rem">
+          <button type="button" onclick="this.closest('.etapa-row').remove()"
+            style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+            <i class="bi bi-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+    <i class="bi bi-plus-lg"></i> Crear flujo
+  </button>
+  </form>
+</div>
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.75rem;font-weight:700;color:#3d1a6e}
+.fi-group input,.fi-group select{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+<script>
+let etapaCount = 1;
+const usuarios = [{% for u in usuarios_empresa %}{ id: {{ u.id }}, nombre: "{{ u.nombre }}" },{% endfor %}];
+function agregarEtapa() {
+  const idx = etapaCount++;
+  const opts = usuarios.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'etapa-row';
+  div.style = 'display:grid;grid-template-columns:2fr 80px 1fr 80px 80px auto;gap:.75rem;margin-bottom:.75rem;align-items:center';
+  div.innerHTML = `
+    <div class="fi-group"><label>Nombre</label><input type="text" name="etapa_nombre[]" placeholder="Nombre de la etapa" required></div>
+    <div class="fi-group"><label>Color</label><input type="color" name="etapa_color[]" value="#8b3fe3" style="padding:.2rem;border:1.5px solid #e2d6f3;border-radius:10px;height:40px;width:100%;cursor:pointer"></div>
+    <div class="fi-group"><label>Responsable</label>
+      <select name="etapa_responsable[]" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+        <option value="">Sin asignar</option>${opts}
+      </select>
+    </div>
+    <div class="fi-group" style="text-align:center"><label style="font-size:.7rem">Final</label>
+      <input type="checkbox" name="etapa_final[]" value="${idx}" style="width:20px;height:20px;accent-color:#1a7a4a;display:block;margin:8px auto 0"></div>
+    <div class="fi-group" style="text-align:center"><label style="font-size:.7rem">Perdido</label>
+      <input type="checkbox" name="etapa_perdido[]" value="${idx}" style="width:20px;height:20px;accent-color:#b91c1c;display:block;margin:8px auto 0"></div>
+    <div style="padding-top:1.5rem">
+      <button type="button" onclick="this.closest('.etapa-row').remove()"
+        style="padding:.4rem .7rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;cursor:pointer;font-size:.8rem">
+        <i class="bi bi-trash"></i></button>
+    </div>`;
+  document.getElementById('listaEtapas').appendChild(div);
+}
+</script>
+{% endblock %}

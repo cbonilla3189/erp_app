@@ -237,6 +237,12 @@
         <a href="{{ url_for('ventas') }}" class="nav-item-link {% if '/ventas' in request.path %}active{% endif %}">
           <i class="bi bi-cash-coin"></i> Ventas
         </a>
+        <a href="{{ url_for('crm') }}" class="nav-item-link {% if '/crm' in request.path %}active{% endif %}">
+          <i class="bi bi-people"></i> CRM
+        </a>
+        <a href="{{ url_for('lista_flujos') }}" class="nav-item-link {% if '/flujos' in request.path %}active{% endif %}">
+          <i class="bi bi-diagram-3"></i> Flujos
+        </a>
         <a href="{{ url_for('reportes') }}" class="nav-item-link {% if request.path == '/reportes' %}active{% endif %}">
           <i class="bi bi-bar-chart-line"></i> Reportes
         </a>

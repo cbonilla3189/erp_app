@@ -1,0 +1,55 @@
+{% extends "panel_base.html" %}
+{% block title %}Nuevo contacto — aruna{% endblock %}
+{% block content %}
+<div style="max-width:620px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div class="section-title" style="margin-bottom:0"><i class="bi bi-person-plus"></i> Nuevo contacto</div>
+    <a href="{{ url_for('crm') }}" class="btn-act btn-edit"><i class="bi bi-arrow-left"></i> Volver</a>
+  </div>
+  <div class="panel-card">
+    <div class="panel-card-header"><h5><i class="bi bi-person"></i> Datos del contacto</h5></div>
+    <div style="padding:1.75rem">
+      <form method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group"><label>Nombre *</label><input type="text" name="nombre" required></div>
+          <div class="fi-group"><label>Apellido</label><input type="text" name="apellido"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group"><label>Empresa</label><input type="text" name="empresa_contacto"></div>
+          <div class="fi-group"><label>Cargo</label><input type="text" name="cargo"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="fi-group"><label>Correo</label><input type="email" name="correo"></div>
+          <div class="fi-group"><label>Telefono</label><input type="text" name="telefono"></div>
+        </div>
+        <div class="fi-group" style="margin-bottom:1rem">
+          <label>Origen</label>
+          <select name="origen" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+            <option value="">— Seleccionar —</option>
+            <option value="referido">Referido</option>
+            <option value="web">Pagina web</option>
+            <option value="redes">Redes sociales</option>
+            <option value="evento">Evento</option>
+            <option value="llamada">Llamada en frio</option>
+            <option value="email">Email</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="fi-group" style="margin-bottom:1.75rem">
+          <label>Notas</label>
+          <textarea name="notas" rows="3"
+            style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;width:100%;resize:vertical"></textarea>
+        </div>
+        <button type="submit" style="width:100%;padding:.85rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Crear contacto
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+.fi-group{display:flex;flex-direction:column;gap:.3rem}
+.fi-group label{font-size:.78rem;font-weight:700;color:#3d1a6e}
+.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px;width:100%}
+</style>
+{% endblock %}
