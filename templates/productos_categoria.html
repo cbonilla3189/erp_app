@@ -3,27 +3,18 @@
 
 {% block content %}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
-  <div>
-    <div class="section-title" style="margin-bottom:.2rem">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ cat.color }};margin-right:.4rem"></span>
-      {{ cat.nombre }}
-    </div>
-    <div style="font-size:.8rem;color:#9c7fc0;padding-left:1.25rem">
-      {{ inv.nombre }} ·
-      {% if cat.tipo == 'activo' %}
-        <span style="color:#1d4ed8;font-weight:600">Activo unico</span>
-      {% else %}
-        <span style="color:#561d9c;font-weight:600">Stock</span> · Minimo: {{ cat.stock_minimo }}
-      {% endif %}
-    </div>
+  <div class="section-title" style="margin-bottom:0">
+    <i class="bi bi-tag"></i> {{ cat.nombre }}
+    <span style="font-size:.8rem;color:#9c7fc0;font-weight:400">— {{ inv.nombre }}</span>
   </div>
   <div style="display:flex;gap:.5rem">
-    <a href="{{ url_for('escanear', inv_id=inv.id) }}" class="btn-act btn-edit">
-      <i class="bi bi-upc-scan"></i> Escanear
-    </a>
     <a href="{{ url_for('categorias', inv_id=inv.id) }}" class="btn-act btn-edit">
-      <i class="bi bi-arrow-left"></i> Categorias
+      <i class="bi bi-arrow-left"></i> Volver
     </a>
+    <button onclick="document.getElementById('modalCampo').style.display='flex'"
+      class="btn-act btn-edit">
+      <i class="bi bi-sliders"></i> Campos
+    </button>
   </div>
 </div>
 
@@ -31,77 +22,76 @@
   {% if messages %}{% for category, message in messages %}
     <div style="padding:.55rem .85rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem;
       {% if category=='success' %}background:#e8f8f0;color:#1a7a4a;border:1px solid #a8e6c3
-      {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">
-      {{ message }}</div>
+      {% else %}background:#fef2f2;color:#b91c1c;border:1px solid #fecaca{% endif %}">{{ message }}</div>
   {% endfor %}{% endif %}
 {% endwith %}
 
-<!-- Formulario agregar -->
+<!-- Formulario agregar producto -->
 <div class="panel-card" style="margin-bottom:1.25rem">
   <div class="panel-card-header">
-    <h5><i class="bi bi-plus-circle"></i> Agregar {{ "activo" if cat.tipo == "activo" else "producto" }}</h5>
+    <h5><i class="bi bi-plus-circle"></i> Agregar {% if cat.tipo == 'activo' %}activo{% else %}producto{% endif %}</h5>
   </div>
-  <div style="padding:1.5rem">
-    <form method="POST">
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:1rem;align-items:end;margin-bottom:{% if campos %}1rem{% else %}0{% endif %}">
-        <div class="fi-group">
-          <label>Nombre *</label>
-          <input type="text" name="nombre" placeholder="Nombre del {{ 'activo' if cat.tipo == 'activo' else 'producto' }}" required>
-        </div>
-        <div class="fi-group">
-          <label>Precio ($)</label>
-          <input type="number" name="precio" placeholder="0.00" min="0" step="0.01" value="0">
-        </div>
-        {% if cat.tipo == 'stock' %}
-        <div class="fi-group">
-          <label>Cantidad</label>
-          <input type="number" name="cantidad" placeholder="0" min="0" value="0">
-        </div>
-        <div class="fi-group">
-          <label>Stock minimo</label>
-          <input type="number" name="stock_minimo" value="{{ cat.stock_minimo }}" min="0">
-        </div>
-        {% endif %}
-        <div class="fi-group">
-          <label>Cod. barras</label>
-          <input type="text" name="codigo_barras" placeholder="Escanea o escribe">
-        </div>
-        <button type="submit" style="padding:.62rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;height:40px">
-          <i class="bi bi-plus-lg"></i> Agregar
-        </button>
+  <form method="POST" style="padding:1.25rem">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:1rem;align-items:end;margin-bottom:{% if campos %}1rem{% else %}0{% endif %}">
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Nombre *</label>
+        <input type="text" name="nombre" placeholder="Nombre del {% if cat.tipo == 'activo' %}activo{% else %}producto{% endif %}" required
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
       </div>
-
-      {% if campos %}
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;padding-top:1rem;border-top:1px solid #f0eaf7">
-        {% for campo in campos %}
-        <div class="fi-group">
-          <label>{{ campo.nombre }}</label>
-          {% if campo.tipo == 'dropdown' %}
-          <select name="campo_{{ campo.id }}" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
-            <option value="">— Seleccionar —</option>
-            {% for op in campo.opciones.split(',') %}
-            <option value="{{ op.strip() }}">{{ op.strip() }}</option>
-            {% endfor %}
-          </select>
-          {% elif campo.tipo == 'fecha' %}
-          <input type="date" name="campo_{{ campo.id }}">
-          {% elif campo.tipo == 'numero' %}
-          <input type="number" name="campo_{{ campo.id }}" step="any" placeholder="0">
-          {% else %}
-          <input type="text" name="campo_{{ campo.id }}" placeholder="{{ campo.nombre }}">
-          {% endif %}
-        </div>
-        {% endfor %}
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Precio ($)</label>
+        <input type="number" name="precio" value="0" min="0" step="0.01"
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+      </div>
+      {% if cat.tipo != 'activo' %}
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Cantidad</label>
+        <input type="number" name="cantidad" value="0" min="0"
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+      </div>
+      {% else %}
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">Cod. barras</label>
+        <input type="text" name="codigo_barras" placeholder="Escanea o escribe"
+          style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
       </div>
       {% endif %}
-    </form>
-  </div>
+      <button type="submit"
+        style="padding:.65rem 1.25rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap">
+        + Agregar
+      </button>
+    </div>
+
+    {% if campos %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;padding-top:.75rem;border-top:1px solid #f0eaf7">
+      {% for campo in campos %}
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <label style="font-size:.78rem;font-weight:700;color:#3d1a6e">{{ campo.nombre }}</label>
+        {% if campo.tipo == 'dropdown' %}
+        <select name="campo_{{ campo.id }}" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+          <option value="">— Seleccionar —</option>
+          {% for op in campo.opciones.split(',') %}
+          <option value="{{ op.strip() }}">{{ op.strip() }}</option>
+          {% endfor %}
+        </select>
+        {% elif campo.tipo == 'fecha' %}
+        <input type="date" name="campo_{{ campo.id }}" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+        {% elif campo.tipo == 'numero' %}
+        <input type="number" name="campo_{{ campo.id }}" placeholder="{{ campo.nombre }}" step="any" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+        {% else %}
+        <input type="text" name="campo_{{ campo.id }}" placeholder="{{ campo.nombre }}" style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </form>
 </div>
 
-<!-- Tabla productos -->
+<!-- Lista de productos -->
 <div class="panel-card">
   <div class="panel-card-header">
-    <h5><i class="bi bi-list-ul"></i> {{ "Activos" if cat.tipo == "activo" else "Productos" }}</h5>
+    <h5><i class="bi bi-list-ul"></i> {% if cat.tipo == 'activo' %}Activos{% else %}Productos{% endif %}</h5>
     <span class="count">{{ productos|length }} registros</span>
   </div>
   {% if productos %}
@@ -111,15 +101,10 @@
         <tr>
           <th>#</th>
           <th>Nombre</th>
-          {% if cat.tipo == 'stock' %}
-          <th>Cantidad</th>
-          <th>Stock min.</th>
-          {% endif %}
           <th>Precio</th>
-          <th>Cod. barras</th>
-          {% for campo in campos %}
-          <th>{{ campo.nombre }}</th>
-          {% endfor %}
+          <th>Cod. Barras</th>
+          {% for campo in campos %}<th>{{ campo.nombre }}</th>{% endfor %}
+          {% if cat.tipo != 'activo' %}<th>Cantidad</th><th>Stock min.</th>{% endif %}
           <th>Fecha</th>
           <th>Acciones</th>
         </tr>
@@ -128,32 +113,29 @@
         {% for p in productos %}
         <tr>
           <td style="color:#c4b4d8;font-size:.8rem">{{ p.id }}</td>
-          <td style="font-weight:600">{{ p.nombre }}</td>
-          {% if cat.tipo == 'stock' %}
-          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% elif p.cantidad <= (p.stock_minimo or 5) %}#92400e{% else %}#1a7a4a{% endif %}">
-            {{ p.cantidad }}
-          </td>
-          <td style="color:#9c7fc0">{{ p.stock_minimo or cat.stock_minimo }}</td>
-          {% endif %}
+          <td style="font-weight:600;color:#2d0060">{{ p.nombre }}</td>
           <td>${{ "%.2f"|format(p.precio) }}</td>
-          <td style="font-family:monospace;font-size:.8rem;color:#9c7fc0">{{ p.codigo_barras or '—' }}</td>
+          <td style="font-family:monospace;font-size:.8rem">{{ p.codigo_barras or '—' }}</td>
           {% for campo in campos %}
           <td>{{ valores.get(p.id, {}).get(campo.id, '—') }}</td>
           {% endfor %}
-          <td style="color:#9c7fc0;font-size:.8rem">{{ p.creado_en.strftime('%Y-%m-%d') if p.creado_en else '—' }}</td>
+          {% if cat.tipo != 'activo' %}
+          <td style="font-weight:700;color:{% if p.cantidad == 0 %}#b91c1c{% elif p.cantidad <= (p.stock_minimo or 5) %}#92400e{% else %}#1a7a4a{% endif %}">{{ p.cantidad }}</td>
+          <td style="color:#9c7fc0">{{ p.stock_minimo or 5 }}</td>
+          {% endif %}
+          <td style="color:#9c7fc0;font-size:.8rem">{{ p.creado_en.strftime('%Y-%m-%d') }}</td>
           <td>
             <div style="display:flex;gap:.35rem">
-              <a href="{{ url_for('ficha_producto', producto_id=p.id) }}" class="btn-act btn-edit">
+              <a href="{{ url_for('generar_qr', producto_id=p.id) }}" class="btn-act btn-edit" title="QR" target="_blank">
                 <i class="bi bi-qr-code"></i>
               </a>
               <a href="{{ url_for('inventario_editar', producto_id=p.id) }}" class="btn-act btn-edit">
                 <i class="bi bi-pencil"></i>
               </a>
-              <a href="{{ url_for('inventario_eliminar', producto_id=p.id) }}"
-                class="btn-act btn-del"
-                onclick="return confirm('Eliminar {{ p.nombre }}?')">
-                <i class="bi bi-trash"></i>
-              </a>
+              <form method="POST" action="{{ url_for('inventario_eliminar', producto_id=p.id) }}" style="margin:0"
+                onsubmit="return confirm('Eliminar {{ p.nombre }}?')">
+                <button type="submit" class="btn-act btn-del"><i class="bi bi-trash"></i></button>
+              </form>
             </div>
           </td>
         </tr>
@@ -162,20 +144,78 @@
     </table>
   </div>
   {% else %}
-  <div style="padding:3rem;text-align:center;color:#9c7fc0">
-    <div style="font-size:2.5rem;margin-bottom:.75rem">{{ "🖥️" if cat.tipo == "activo" else "📦" }}</div>
-    <div style="font-size:.95rem;font-weight:600;color:#2d0060;margin-bottom:.35rem">
-      Sin {{ "activos" if cat.tipo == "activo" else "productos" }} aun
-    </div>
-    <div style="font-size:.85rem">Agrega el primer {{ "activo" if cat.tipo == "activo" else "producto" }} usando el formulario de arriba.</div>
+  <div style="padding:2.5rem;text-align:center;color:#9c7fc0">
+    <div style="font-size:2rem;margin-bottom:.5rem">📦</div>
+    <div style="font-weight:600;color:#2d0060">Sin {% if cat.tipo == 'activo' %}activos{% else %}productos{% endif %} aun</div>
   </div>
   {% endif %}
 </div>
 
-<style>
-.fi-group{display:flex;flex-direction:column;gap:.3rem}
-.fi-group label{font-size:.75rem;font-weight:700;color:#3d1a6e}
-.fi-group input{padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.88rem;color:#1a0035;background:#fdf9ff;outline:none;transition:border-color .2s;height:40px}
-.fi-group input:focus{border-color:#8b3fe3;box-shadow:0 0 0 3px rgba(139,63,227,.1)}
-</style>
+<!-- Modal campos personalizados -->
+<div id="modalCampo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;overflow:hidden">
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid #f0eaf7;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:.95rem;font-weight:700;color:#2d0060"><i class="bi bi-sliders"></i> Campos personalizados</span>
+      <button onclick="document.getElementById('modalCampo').style.display='none'"
+        style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9c7fc0">×</button>
+    </div>
+    <div style="padding:1.25rem">
+      {% if campos %}
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#8b3fe3;margin-bottom:.5rem">Campos actuales</div>
+        {% for campo in campos %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:#f8f5ff;border-radius:8px;margin-bottom:.35rem">
+          <span style="font-size:.85rem;font-weight:600;color:#2d0060">{{ campo.nombre }}</span>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:.72rem;color:#9c7fc0;background:#f0e8ff;padding:.1rem .4rem;border-radius:10px">{{ campo.tipo }}</span>
+            <a href="{{ url_for('eliminar_campo', campo_id=campo.id) }}"
+              style="color:#b91c1c;font-size:.8rem;text-decoration:none"
+              onclick="return confirm('Eliminar campo {{ campo.nombre }}?')">
+              <i class="bi bi-trash"></i>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#8b3fe3;margin-bottom:.5rem">Agregar campo</div>
+      <form method="POST" action="{{ url_for('campos_personalizados') }}">
+        <input type="hidden" name="inventario_id" value="{{ inv.id }}">
+        <input type="hidden" name="redirect_url" value="{{ request.url }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem">
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label style="font-size:.75rem;font-weight:700;color:#3d1a6e">Nombre *</label>
+            <input type="text" name="nombre" placeholder="Ej. Marca, Modelo" required
+              style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.25rem">
+            <label style="font-size:.75rem;font-weight:700;color:#3d1a6e">Tipo</label>
+            <select name="tipo" onchange="toggleOpciones(this)"
+              style="padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;height:40px">
+              <option value="texto">Texto</option>
+              <option value="numero">Numero</option>
+              <option value="fecha">Fecha</option>
+              <option value="dropdown">Lista desplegable</option>
+            </select>
+          </div>
+        </div>
+        <div id="opcionesDiv" style="display:none;margin-bottom:.75rem">
+          <label style="font-size:.75rem;font-weight:700;color:#3d1a6e">Opciones (separadas por coma)</label>
+          <input type="text" name="opciones" placeholder="Ej. Activo,En reparacion,De baja"
+            style="width:100%;padding:.6rem .85rem;border:1.5px solid #e2d6f3;border-radius:10px;font-size:.9rem;color:#1a0035;background:#fdf9ff;outline:none;margin-top:.25rem">
+        </div>
+        <button type="submit"
+          style="width:100%;padding:.75rem;background:linear-gradient(135deg,#561d9c,#8b3fe3);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer">
+          <i class="bi bi-plus-lg"></i> Agregar campo
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleOpciones(sel) {
+  document.getElementById('opcionesDiv').style.display = sel.value === 'dropdown' ? 'block' : 'none';
+}
+</script>
 {% endblock %}

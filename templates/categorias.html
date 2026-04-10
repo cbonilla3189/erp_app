@@ -7,7 +7,7 @@
     <i class="bi bi-tags"></i> Categorias — {{ inv.nombre }}
   </div>
   <div style="display:flex;gap:.5rem">
-    <a href="{{ url_for('inventario', inv_id=inv.id) }}" class="btn-act btn-edit">
+    <a href="{{ url_for('lista_inventarios') }}" class="btn-act btn-edit">
       <i class="bi bi-arrow-left"></i> Volver
     </a>
     <a href="{{ url_for('nueva_categoria', inv_id=inv.id) }}"

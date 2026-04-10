@@ -774,10 +774,17 @@ def campos_personalizados():
         tipo    = request.form.get("tipo", "texto")
         opciones = request.form.get("opciones", "").strip()
         if nombre:
-            campo = CampoPersonalizado(empresa=empresa, nombre=nombre, tipo=tipo, opciones=opciones)
+            inventario_id = request.form.get("inventario_id")
+            campo = CampoPersonalizado(
+                empresa=empresa, nombre=nombre, tipo=tipo, opciones=opciones,
+                inventario_id=int(inventario_id) if inventario_id else None
+            )
             db.session.add(campo)
             db.session.commit()
             flash(f"Campo '{nombre}' creado.", "success")
+        redirect_url = request.form.get("redirect_url")
+        if redirect_url:
+            return redirect(redirect_url)
         return redirect(url_for("campos_personalizados"))
 
     campos = CampoPersonalizado.query.filter_by(empresa=empresa).all()
