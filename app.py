@@ -2111,6 +2111,44 @@ def ejecutar_reglas(flujo_id, etapa_id, trigger, oportunidad=None, tarea=None):
 # -----------------------------
 
 
+
+# -----------------------------
+# API para n8n
+# -----------------------------
+@app.route("/api/suscripciones/por-vencer")
+def api_suscripciones_por_vencer():
+    api_key = request.headers.get("X-API-Key") or request.args.get("api_key")
+    if api_key != os.environ.get("N8N_API_KEY", "aruna-n8n-2024"):
+        return jsonify({"error": "No autorizado"}), 401
+    import datetime as dt
+    today = dt.date.today()
+    dias = int(request.args.get("dias", 7))
+    fecha_limite = today + dt.timedelta(days=dias)
+    suscripciones = Suscripcion.query.filter(
+        Suscripcion.estado == "activa",
+        Suscripcion.proximo_cobro <= fecha_limite,
+        Suscripcion.proximo_cobro >= today
+    ).all()
+    resultado = []
+    for s in suscripciones:
+        dias_restantes = (s.proximo_cobro - today).days
+        resultado.append({
+            "id": s.id,
+            "cliente": s.cliente_nombre,
+            "plan": s.plan or "",
+            "monto": float(s.monto),
+            "frecuencia": s.frecuencia,
+            "proximo_cobro": s.proximo_cobro.isoformat(),
+            "dias_restantes": dias_restantes,
+            "empresa": s.empresa,
+            "correo_cliente": Cliente.query.get(s.cliente_id).correo if s.cliente_id else ""
+        })
+    return jsonify({
+        "total": len(resultado),
+        "fecha_consulta": today.isoformat(),
+        "suscripciones": resultado
+    })
+
 # -----------------------------
 # Run
 # -----------------------------
